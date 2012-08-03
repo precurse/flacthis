@@ -29,22 +29,23 @@ import argparse
 import shutil
 import sys
 import subprocess
-import mutagen
+import mutagen		# ID3 Tags
 
 lossless_formats = ('flac',)	# For future use.
 
 
 
 def main():
-	source 	= '' 	# MUST BE SET (No trailing slash)
-	dest 	= ''	# MUST BE SET (No trailing slash)
-	
-	flac_exec = '/usr/bin/flac' # Ensure valid paths
-	lame_exec = '/usr/bin/lame'
+	source = '/nfs/music/lossless/FLAC' 
+	dest = '/nfs/music/lossy/converted_mp3s'
+
+	flac_exec,lame_exec = FindEncoders()
+
+	#flac_exec = '/usr/bin/flac'
+	#lame_exec = '/usr/bin/lame'
 	lame_flags = '-V 0'
 
-
-	CheckEncoders(flac_exec,lame_exec)
+	VerifyEncoders(flac_exec,lame_exec)
 
 	CreateDestFolderStructure(dest, source)
 
@@ -66,7 +67,8 @@ def main():
 		lossy_file = TranslateSourceToDestFileName(dest,source,file)
 		lossy_file_tmp = lossy_file + '.tmp'
 
-		command = '{0} -c -d "{1}" | {2} - "{3}" {4}'.format(flac_exec,lossless_file,lame_exec,lossy_file_tmp,lame_flags)
+		command = '{0} -c -d "{1}" | {2} - "{3}" {4}'.format \
+		(flac_exec,lossless_file,lame_exec,lossy_file_tmp,lame_flags)
 
 
 		print 'Starting file {0} of {1}'.format(count+1,len(create_music_files))
@@ -95,13 +97,58 @@ def main():
 
 	PrintComplete(count,failed,failed_tag)
 
-def CheckEncoders(flac_exec,lame_exec):
+def FindEncoders():
+
+	error = ''
+
+	# Check default path for executable
+	tmp = FindEncoderDefaultPath('flac')
+	if tmp != -1:
+		flac_exec = tmp
+	else:
+		error += "FLAC executable not found in path\n"
+
+	tmp = FindEncoderDefaultPath('lame')
+	if tmp != -1:
+		lame_exec = tmp
+	else:
+		error += "LAME executable not found in path\n"
+
+	if error != '':
+		print error
+		raise SystemExit
+
+	return flac_exec,lame_exec
+
+def FindEncoderDefaultPath(exec_name):
+	def_paths = os.path.defpath.split(':')
+
+	# Check if encoder in default path exists
+	for path in def_paths:
+		current = os.path.join(path,exec_name)
+
+		if os.path.isfile(current):
+			return current
+
+	# Not found if reached here
+	return -1
+
+def VerifyEncoders(flac_exec,lame_exec):
+
+	error = ''
 
 	if os.path.isfile(flac_exec) is False:
-		print "FLAC executable does not exist"
-		raise SystemExit
-	elif os.path.isfile(lame_exec) is False:
-		print "Lame executable does not exist"
+		error += "FLAC executable not found\n"
+	elif os.access(flac_exec,os.X_OK) is False:
+		error += "FLAC executable not executable\n"
+
+	if os.path.isfile(lame_exec) is False:
+		error += "LAME executable not found\n"
+	elif os.access(lame_exec,os.X_OK) is False:
+		error += "LAME executable not executable\n"
+
+	if error != '':
+		print error
 		raise SystemExit
 
 
