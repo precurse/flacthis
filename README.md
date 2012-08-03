@@ -18,6 +18,6 @@ Prerequisites:
 
 HOW-TO USE:
 	Currently source and destination directories must be hardcoded in the Python source file. Please ensure that the flac and lame paths 
-are setup properly. No checks are in place right now for them, but will be added in the future.
+are setup properly.
 
 Run, and enjoy.
