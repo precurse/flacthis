@@ -17,7 +17,6 @@ Prerequisites:
 	- Python2
 
 HOW-TO USE:
-	Currently source and destination directories must be hardcoded in the Python source file. Please ensure that the flac and lame paths 
-are setup properly.
+	Currently source and destination directories must be hardcoded in the Python source file.
 
 Run, and enjoy.
