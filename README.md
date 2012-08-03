@@ -1,12 +1,16 @@
 flacthis
 ========
 
-To clone a flac directory structure into an idential mp3-converted structure.
+To clone a FLAC lossless audio directory structure, turning it into an mp3-converted structure.
 
-Written in Python2
+NOTE: No files or directories will ever be deleted. Only new directories and files can be created.
 
-Prerequestites:
+Prerequisites:
+
 	- Lame
+
 	- FLAC
+
 	- Mutagen Python library (used for tagging)
+
 	- Python2
