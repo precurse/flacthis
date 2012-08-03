@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
 import os
-import argparse		# Future use
+import argparse
 import shutil
 import sys
 import subprocess
@@ -36,12 +36,15 @@ lossless_formats = ('flac',)	# For future use.
 
 
 def main():
-	source = "./src"	  # MUST BE SET (No trailing slash)
-	dest = "./dst"  # MUST BE SET (No trailing slash)
+	source 	= '' 	# MUST BE SET (No trailing slash)
+	dest 	= ''	# MUST BE SET (No trailing slash)
 	
-	flac_exec = '/usr/bin/flac' # Ensure valid path
+	flac_exec = '/usr/bin/flac' # Ensure valid paths
 	lame_exec = '/usr/bin/lame'
 	lame_flags = '-V 0'
+
+
+	CheckEncoders(flac_exec,lame_exec)
 
 	CreateDestFolderStructure(dest, source)
 
@@ -92,6 +95,16 @@ def main():
 
 	PrintComplete(count,failed,failed_tag)
 
+def CheckEncoders(flac_exec,lame_exec):
+
+	if os.path.isfile(flac_exec) is False:
+		print "FLAC executable does not exist"
+		raise SystemExit
+	elif os.path.isfile(lame_exec) is False:
+		print "Lame executable does not exist"
+		raise SystemExit
+
+
 def GetLosslessMusicList(source,dest_list):
 	for dirpath, dirnames, filenames in os.walk(source):
 		for filename in filenames:
@@ -115,6 +128,7 @@ def UpdateLossyTags(lossy_file,lossless_file):
 			lossy_tags[k] = lossless_tags[k]
 
 	lossy_tags.save()
+
 
 def CreateDestFolderStructure(dest_dir, source_dir):
 	# Try to create every folder needed and catch any exceptions (directory already created)
