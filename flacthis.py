@@ -36,14 +36,14 @@ lossless_formats = ('flac',)	# For future use.
 
 
 def main():
-	source = '/nfs/music/lossless/FLAC' 
-	dest = '/nfs/music/lossy/converted_mp3s'
+	source = '/FLAC'  # Set to desired source
+	dest = '/MP3'	  # Set to desired destination
 
 	flac_exec,lame_exec = FindEncoders()
 
 	#flac_exec = '/usr/bin/flac'
 	#lame_exec = '/usr/bin/lame'
-	lame_flags = '-V 0'
+	lame_flags = '-V 0'	# Change quality levels. 0 = highest VBR quality
 
 	VerifyEncoders(flac_exec,lame_exec)
 
