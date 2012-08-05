@@ -24,209 +24,278 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
+
 import os
-import argparse
+#import argparse
 import shutil
 import sys
-import subprocess
-import mutagen		# ID3 Tags
+#import subprocess
+import mutagen        # ID3 Tags
+#import threading
+from multiprocessing import Lock
 
-lossless_formats = ('flac',)	# For future use.
+lossless_formats = ('flac',)    # For future use.
 
+lame_flags = '-V 0'
+
+
+# Results
+
+success = 0     # Successful conversions
+error_conv = []  # List of error conversions
+error_id3 = []  # List of error id3 tags
+
+# Locks
+
+l_success = Lock()
+l_error_conv = Lock()
+l_error_id3 = Lock()    
+l_music_list = Lock()   # Lock for music to convert
 
 
 def main():
-	source = '/flac' 
-	dest = '/mp3'
+    source = '/FLAC' 
+    dest = '/MP3'
 
-	# Must remove trailing slashes
-        source = source.rstrip('/')	
-        dest = dest.rstrip('/')
+    # Must remove trailing slashes
+    source = source.rstrip('/')    
+    dest = dest.rstrip('/')
 
-	src_enc,dst_enc = findEncoders()
+    src_enc,dst_enc = findEncoders()
 
-	#src_enc = '/usr/bin/flac'	# Source encoder (lossless) override
-	#dst_enc = '/usr/bin/lame'	# Destination encoder (lossy) override
-	lame_flags = '-V 0'
-
-	verifyEncoders(src_enc,dst_enc)
-
-	createDestFolderStructure(dest, source)
-
-	all_music_files = []	# All lossless music files
-	create_music_files = []	# For files needing conversion
+    #src_enc = '/usr/bin/flac'    # Source encoder (lossless) override
+    #dst_enc = '/usr/bin/lame'    # Destination encoder (lossy) override
 
 
-	getLosslessMusicList(source,all_music_files)
+    verifyEncoders(src_enc,dst_enc)
 
-	getLossyMusicToConvert(dest,source,all_music_files,create_music_files)
+    createDestFolderStructure(dest, source)
 
-	# Need for inside loop
-	count = 0 	
-	failed = 0	
-	failed_tag = 0
-
-	for file in create_music_files:
-		lossless_file = file
-		lossy_file = translateSourceToDestFileName(dest,source,file)
-		lossy_file_tmp = lossy_file + '.tmp'
-
-		command = '{0} -c -d "{1}" | {2} - "{3}" {4}'.format \
-		(src_enc,lossless_file,dst_enc,lossy_file_tmp,lame_flags)
+    all_music_files = []    # All lossless music files
+    create_music_files = []    # For files needing conversion
 
 
-		print 'Starting file {0} of {1}'.format(count+1,len(create_music_files))
+    getLosslessMusicList(source,all_music_files)
 
-		try:
+    getLossyMusicToConvert(dest,source,all_music_files,create_music_files)
 
-			status = os.system(command)
 
-			if status == 2 :
-				print "\n\nCancelled by user"
-				raise SystemExit
-			elif status > 0:
-				raise NameError('FlacConversionFailed')
+    for lossless_file in create_music_files:
+        
+        lossy_file = translateSourceToDestFileName(dest,source,lossless_file)
+        
+        conv_result = doConvertToLossyFile(lossless_file,lossy_file,src_enc,dst_enc)
+        
+        # Skip ID3 tags if the conversion failed 
+        if conv_result == 0:
+            doUpdateLossyTags(lossy_file,lossless_file)
+            
 
-			# Move .tmp after conversion
-			shutil.move(lossy_file_tmp, lossy_file)
 
-		except:
-			failed += 1
-		else:
-			count += 1
-			try:
-				updateLossyTags(lossy_file,lossless_file)
-			except: 
-				failed_tag += 1
-
-	printComplete(count,failed,failed_tag)
+    printComplete()
 
 def findEncoders():
+    """ Finds all needed encoders on the system."""
 
-	error = ''
+    error = ''
 
-	# Check default path for executable
-	tmp = findEncoderDefaultPath('flac')
-	if tmp != -1:
-		src_exec = tmp
-	else:
-		error += "FLAC executable not found in path\n"
+    # Check default path for executable
+    tmp = findEncoderDefaultPath('flac')
+    if tmp != -1:
+        src_exec = tmp
+    else:
+        error += "FLAC executable not found in path\n"
 
-	tmp = findEncoderDefaultPath('lame')
-	if tmp != -1:
-		dst_exec = tmp
-	else:
-		error += "LAME executable not found in path\n"
+    tmp = findEncoderDefaultPath('lame')
+    if tmp != -1:
+        dst_exec = tmp
+    else:
+        error += "LAME executable not found in path\n"
 
-	if error != '':
-		print error
-		raise SystemExit
+    if error != '':
+        print error
+        raise SystemExit
 
-	return src_exec,dst_exec
+    return src_exec,dst_exec
+
+def convertToLossyFile(lossless_file,lossy_file,src_enc,dst_enc):
+    
+    lossy_file_tmp = lossy_file + '.tmp'
+    
+    command = '{0} -c -d "{1}" | {2} - "{3}" {4}'.format \
+    (src_enc,lossless_file,dst_enc,lossy_file_tmp,lame_flags)
+    
+
+    
+    #print 'Starting file {0} of {1}'.format(count+1,len(create_music_files))
+    
+    status = os.system(command)
+
+    if status == 2 :
+        print "\n\nCancelled by user"
+        raise SystemExit
+    elif status > 0:
+        raise NameError('FlacConversionFailed')
+
+    # Move .tmp after conversion
+    shutil.move(lossy_file_tmp, lossy_file)
+
+
+
+def doConvertToLossyFile(lossless_file,lossy_file,src_enc,dst_enc):
+    global success
+    
+    try:
+        convertToLossyFile(lossless_file,lossy_file,src_enc,dst_enc)
+    
+    except:
+        
+        l_error_conv.acquire()
+        error_conv.append(lossless_file)
+        l_error_conv.release()
+        
+        return 1
+    
+    else:
+        
+        l_success.acquire()
+        success += 1
+        l_success.release()
+        
+        return 0
+        
 
 def findEncoderDefaultPath(exec_name):
-	def_paths = os.path.defpath.split(':')
+    """ Searches the default path for a specific named encoder """
 
-	# Check if encoder in default path exists
-	for path in def_paths:
-		current = os.path.join(path,exec_name)
+    def_paths = os.path.defpath.split(':')
 
-		if os.path.isfile(current):
-			return current
+    # Check if encoder in default path exists
+    for path in def_paths:
+        current = os.path.join(path,exec_name)
 
-	# Not found if reached here
-	return -1
+        if os.path.isfile(current):
+            # Return first instance if encoder found
+            return current
+
+    # Encoder not found if reached here
+    return -1
 
 def verifyEncoders(src_enc,dst_enc):
+    """ Verifies source and destination encoders exist and are executable. 
+        Exits if either is not true."""
 
-	error = ''
+    error = ''
 
-	if os.path.isfile(src_enc) is False:
-		error += "FLAC executable not found\n"
-	elif os.access(src_enc,os.X_OK) is False:
-		error += "FLAC executable not executable\n"
+    if os.path.isfile(src_enc) is False:
+        error += "FLAC executable not found\n"
+    elif os.access(src_enc,os.X_OK) is False:
+        error += "FLAC executable not executable\n"
 
-	if os.path.isfile(dst_enc) is False:
-		error += "LAME executable not found\n"
-	elif os.access(dst_enc,os.X_OK) is False:
-		error += "LAME executable not executable\n"
+    if os.path.isfile(dst_enc) is False:
+        error += "LAME executable not found\n"
+    elif os.access(dst_enc,os.X_OK) is False:
+        error += "LAME executable not executable\n"
 
-	if error != '':
-		print error
-		raise SystemExit
+    if error != '':
+        print error
+        raise SystemExit
 
 
 def getLosslessMusicList(source,dest_list):
-	for dirpath, dirnames, filenames in os.walk(source):
-		for filename in filenames:
-			if os.path.splitext(filename)[1][1:] in lossless_formats:
-				dest_list.append(os.path.join(dirpath,filename))
+    """Gets list of ALL lossless music in source directory and
+    places it in a list."""
+
+    for dirpath, dirnames, filenames in os.walk(source):
+        for filename in filenames:
+            if os.path.splitext(filename)[1][1:] in lossless_formats:
+                dest_list.append(os.path.join(dirpath,filename))
 
 def getLossyMusicToConvert(dest,source,src_list,dest_list):
-	for file in src_list:
-		if doesLossyFileExist(dest, source, file) == False:
-			# Lossy song does not exist
-			dest_list.append(file)
+    """Compares list of all lossless music to what lossy music currently exists
+        and adds non-existent files to another list."""
+
+    for file in src_list:
+        if doesLossyFileExist(dest, source, file) == False:
+            # Lossy song does not exist
+            dest_list.append(file)
 
 
 def updateLossyTags(lossy_file,lossless_file):
+    """ Copies ID3 tags from lossless file to lossy file. """
+    
+    lossless_tags = mutagen.File(lossless_file, easy=True)
+    lossy_tags = mutagen.File(lossy_file, easy=True)
 
-	lossless_tags = mutagen.File(lossless_file, easy=True)
-	lossy_tags = mutagen.File(lossy_file, easy=True)
+    for k in lossless_tags:
+        if k in ('album','artist','title','performer','tracknumber','date','genre',):
+            lossy_tags[k] = lossless_tags[k]
 
-	for k in lossless_tags:
-		if k in ('album','artist','title','performer','tracknumber','date','genre',):
-			lossy_tags[k] = lossless_tags[k]
+    lossy_tags.save()
 
-	lossy_tags.save()
 
+def doUpdateLossyTags(lossy_file,lossless_file):
+    
+    try:
+        
+        updateLossyTags(lossy_file,lossless_file)
+        
+    except:
+        l_error_id3.acquire()
+        error_id3.append(lossy_file)
+        l_error_id3.release()
+    
 
 def createDestFolderStructure(dest_dir, source_dir):
-	# Try to create every folder needed and catch any exceptions (directory already created)
-	# This avoids any directory creation race conditions
+    # Try to create every folder needed and catch any exceptions (directory already created)
+    # This avoids any directory creation race conditions
 
-	for dirpath, dirnames, filenames  in os.walk(source_dir):
-		try:
-			os.makedirs(os.path.join(dest_dir,dirpath[1+len(source_dir):]))
-		except:
-			pass	
+    for dirpath, dirnames, filenames  in os.walk(source_dir):
+        try:
+            os.makedirs(os.path.join(dest_dir,dirpath[1+len(source_dir):]))
+        except:
+            pass    
 
 
 
 def doesLossyFileExist(dest_dir, source_dir, source_file_path):
-	# Dest with .lossless extension
-	#dest = os.path.join(dest_dir, source_file_path[1+len(source):])
-	dest = translateSourceToDestFileName(dest_dir, source_dir, source_file_path)
-	# Remove ext and add .mp3 extension
-	dest = os.path.splitext(dest)[0] + '.mp3'
+    # Dest with .lossless extension
+    #dest = os.path.join(dest_dir, source_file_path[1+len(source):])
+    dest = translateSourceToDestFileName(dest_dir, source_dir, source_file_path)
+    # Remove ext and add .mp3 extension
+    dest = os.path.splitext(dest)[0] + '.mp3'
 
-	return  os.path.exists(dest)
+    return  os.path.exists(dest)
 
 def translateSourceToDestFileName(dest_dir, source_dir, source_file_path):
-	# Remove "src_path" from path
-	dest = os.path.join(dest_dir, source_file_path[1+len(source_dir):])
+    # Remove "src_path" from path
+    dest = os.path.join(dest_dir, source_file_path[1+len(source_dir):])
 
-	# Add mp3 extension
-	dest = os.path.splitext(dest)[0] + '.mp3'
+    # Add mp3 extension
+    dest = os.path.splitext(dest)[0] + '.mp3'
 
-	return dest
+    return dest
 
-def printComplete(count,failed,failed_id3):
-	output = ''
+def printComplete():
+    output = ''
 
-	if failed > 0:
-		output += '{} songs failed to convert\n'.format(failed)
+    count_failed_conv = len(error_conv)
+    count_failed_id3 = len(error_id3)
 
-	if failed_id3 > 0:
-		output += '{} id3 tags failed to write\n'.format(failed_id3)	
 
-	if count > 0:
-		output += '{} songs successfully converted'.format(count)
-	else:
-		output += 'No songs converted'
 
-	print output
+    if count_failed_conv > 0:
+        output += '{} songs failed to convert\n'.format(count_failed_conv)
+
+    if count_failed_id3 > 0:
+        output += '{} id3 tags failed to write\n'.format(count_failed_id3)    
+
+    if success > 0:
+        output += '{} songs successfully converted'.format(success)
+    else:
+        output += 'No songs converted'
+
+    print output
 
 if __name__ == "__main__": 
-	sys.exit(main())
-
+    sys.exit(main())
