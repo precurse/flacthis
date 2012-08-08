@@ -31,9 +31,9 @@ import time
 import shutil
 import sys
 #import subprocess
-import mutagen        # ID3 Tags
+import mutagen              # ID3 Tags
 import threading
-import multiprocessing
+import multiprocessing      # for cpu count
 
 lossless_formats = ('flac',)    # For future use.
 
@@ -48,8 +48,8 @@ error_id3 = []  # List of error id3 tags
 
 
 def main():
-    source = '/nfs/music/lossless/FLAC' 
-    dest = '/nfs/music/lossy/converted_mp3s'
+    source = '/FLAC' 
+    dest = '/MP3'
 
     # Must remove trailing slashes
     source = source.rstrip('/')    
