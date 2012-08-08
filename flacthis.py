@@ -26,13 +26,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
 import os
+import time
 #import argparse
 import shutil
 import sys
 #import subprocess
 import mutagen        # ID3 Tags
-#import threading
-from multiprocessing import Lock
+import threading
+import multiprocessing
 
 lossless_formats = ('flac',)    # For future use.
 
@@ -45,17 +46,10 @@ success = 0     # Successful conversions
 error_conv = []  # List of error conversions
 error_id3 = []  # List of error id3 tags
 
-# Locks
-
-l_success = Lock()
-l_error_conv = Lock()
-l_error_id3 = Lock()    
-l_music_list = Lock()   # Lock for music to convert
-
 
 def main():
-    source = '/FLAC' 
-    dest = '/MP3'
+    source = '/nfs/music/lossless/FLAC' 
+    dest = '/nfs/music/lossy/converted_mp3s'
 
     # Must remove trailing slashes
     source = source.rstrip('/')    
@@ -66,8 +60,9 @@ def main():
     #src_enc = '/usr/bin/flac'    # Source encoder (lossless) override
     #dst_enc = '/usr/bin/lame'    # Destination encoder (lossy) override
 
-
     verifyEncoders(src_enc,dst_enc)
+
+    max_cpus = multiprocessing.cpu_count()
 
     createDestFolderStructure(dest, source)
 
@@ -80,19 +75,57 @@ def main():
     getLossyMusicToConvert(dest,source,all_music_files,create_music_files)
 
 
-    for lossless_file in create_music_files:
+    
+    # As long as we have entries in the list to convert..
+    while len(create_music_files) > 0:
+        
+        # Get file from list and remove
+        lossless_file = create_music_files.pop()
         
         lossy_file = translateSourceToDestFileName(dest,source,lossless_file)
         
-        conv_result = doConvertToLossyFile(lossless_file,lossy_file,src_enc,dst_enc)
-        
-        # Skip ID3 tags if the conversion failed 
-        if conv_result == 0:
-            doUpdateLossyTags(lossy_file,lossless_file)
+        t = threading.Thread(target=doBackgroundEncodeAndTagging, \
+                             args=(lossless_file,lossy_file,src_enc,dst_enc))
+    
+        t.start()
+     
+        # Ensure that there's always <= max_cpu threads running
+        while getNumberOfRunningThreads() >= max_cpus: 
+            time.sleep(3)
+            
             
 
+    # Wait for threads to complete
+    main_thread = threading.current_thread()
+    
+    for t in threading.enumerate():
+        if t is main_thread:
+            continue
+        t.join()
 
     printComplete()
+
+
+def doBackgroundEncodeAndTagging(lossless_file,lossy_file,src_enc,dst_enc):
+
+    conv_result = doConvertToLossyFile(lossless_file,lossy_file,src_enc,dst_enc)
+
+    # Skip ID3 tags if the conversion failed 
+    if conv_result == 0:
+        doUpdateLossyTags(lossy_file,lossless_file)
+        
+        
+def getNumberOfRunningThreads():
+    main_thread = threading.currentThread()
+    
+    count = 0
+    
+    for t in threading.enumerate():
+        if t is main_thread:
+            continue
+        count += 1
+        
+    return count
 
 def findEncoders():
     """ Finds all needed encoders on the system."""
@@ -113,7 +146,7 @@ def findEncoders():
         error += "LAME executable not found in path\n"
 
     if error != '':
-        print error
+        print(error)
         raise SystemExit
 
     return src_exec,dst_exec
@@ -132,7 +165,7 @@ def convertToLossyFile(lossless_file,lossy_file,src_enc,dst_enc):
     status = os.system(command)
 
     if status == 2 :
-        print "\n\nCancelled by user"
+        print("\n\nCancelled by user")
         raise SystemExit
     elif status > 0:
         raise NameError('FlacConversionFailed')
@@ -150,17 +183,17 @@ def doConvertToLossyFile(lossless_file,lossy_file,src_enc,dst_enc):
     
     except:
         
-        l_error_conv.acquire()
+        #l_error_conv.acquire()
         error_conv.append(lossless_file)
-        l_error_conv.release()
+        #l_error_conv.release()
         
         return 1
     
     else:
         
-        l_success.acquire()
+        #l_success.acquire()
         success += 1
-        l_success.release()
+        #l_success.release()
         
         return 0
         
@@ -198,7 +231,7 @@ def verifyEncoders(src_enc,dst_enc):
         error += "LAME executable not executable\n"
 
     if error != '':
-        print error
+        print(error)
         raise SystemExit
 
 
@@ -241,9 +274,9 @@ def doUpdateLossyTags(lossy_file,lossless_file):
         updateLossyTags(lossy_file,lossless_file)
         
     except:
-        l_error_id3.acquire()
+        #l_error_id3.acquire()
         error_id3.append(lossy_file)
-        l_error_id3.release()
+        #l_error_id3.release()
     
 
 def createDestFolderStructure(dest_dir, source_dir):
@@ -295,7 +328,7 @@ def printComplete():
     else:
         output += 'No songs converted'
 
-    print output
+    print(output)
 
 if __name__ == "__main__": 
     sys.exit(main())
