@@ -1,6 +1,6 @@
 #!/usr/bin/python2
 '''
-Copyright (c) 2012, Andrew Klaus
+Copyright (c) 2012, Andrew Klaus <andrewklaus@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -46,10 +46,9 @@ success = 0     # Successful conversions
 error_conv = []  # List of error conversions
 error_id3 = []  # List of error id3 tags
 
-
 def main():
-    source = '/FLAC' 
-    dest = '/MP3'
+    source = '/nfs/music/lossless/FLAC' 
+    dest = '/nfs/music/lossy/converted_mp3s'
 
     # Must remove trailing slashes
     source = source.rstrip('/')    
@@ -89,7 +88,7 @@ def main():
     
         t.start()
      
-        # Ensure that there's always <= max_cpu threads running
+        # Don't allow more than max_cpu threads to run 
         while getNumberOfRunningThreads() >= max_cpus: 
             time.sleep(3)
             
@@ -116,6 +115,8 @@ def doEncodeAndTagging(lossless_file,lossy_file,src_enc,dst_enc):
         
         
 def getNumberOfRunningThreads():
+    """Returns number of non-main Python threads"""
+    
     main_thread = threading.currentThread()
     
     count = 0
@@ -269,7 +270,7 @@ def updateLossyTags(lossy_file,lossless_file):
 
 
 def doUpdateLossyTags(lossy_file,lossless_file):
-    
+
     try:
         
         updateLossyTags(lossy_file,lossless_file)
