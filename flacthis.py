@@ -84,7 +84,7 @@ def main():
         
         lossy_file = translateSourceToDestFileName(dest,source,lossless_file)
         
-        t = threading.Thread(target=doBackgroundEncodeAndTagging, \
+        t = threading.Thread(target=doEncodeAndTagging, \
                              args=(lossless_file,lossy_file,src_enc,dst_enc))
     
         t.start()
@@ -106,11 +106,11 @@ def main():
     printComplete()
 
 
-def doBackgroundEncodeAndTagging(lossless_file,lossy_file,src_enc,dst_enc):
+def doEncodeAndTagging(lossless_file,lossy_file,src_enc,dst_enc):
 
     conv_result = doConvertToLossyFile(lossless_file,lossy_file,src_enc,dst_enc)
 
-    # Skip ID3 tags if the conversion failed 
+    # Only ID3 tag if conversion successful
     if conv_result == 0:
         doUpdateLossyTags(lossy_file,lossless_file)
         
@@ -120,6 +120,7 @@ def getNumberOfRunningThreads():
     
     count = 0
     
+    # Count all threads except the main thread
     for t in threading.enumerate():
         if t is main_thread:
             continue
