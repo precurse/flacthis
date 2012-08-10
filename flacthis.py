@@ -50,12 +50,13 @@ decoders = {
 encoders = {
             'mp3' : ('lame','.mp3','-V 0', \
                      '{exe} - "{output_file}" {flags}'),
-            
+
+            'ogg' : ('oggenc','.ogg','-q 6', \
+                     '{exe} - -o "{output_file}" {flags}'),            
             # NOT CURRENTLY IMPLEMENTED
             #'aac' : ('ffmpeg','.m4a','', \
             #         ''),   
-            #'ogg' : ('oggenc','.ogg,','', \
-            #         ''),
+
             }
 
 class Codec:
@@ -167,11 +168,12 @@ class LosslessToLossyConverter:
         """Provides translation between the source file and destination file"""
         
         # Remove "src_path" from path
-        #logging.debug('translate got: '+ lossless_file_path)
+        logging.debug('translate got: '+ lossless_file_path)
         dest = os.path.join(self.dest_dir, lossless_file_path[1+len(self.source_dir):])
-        # Add mp3 extension
+        
+        # Add extension
         dest = os.path.splitext(dest)[0] + self.Dest_Codec.ext
-        #logging.debug('translate changed dest to: '+ dest)
+        logging.debug('translate changed dest to: '+ dest)
         
         return dest
     
@@ -354,12 +356,11 @@ class LosslessToLossyConverter:
 
 
 def main():
-    #logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG)
 
     source_dir = '/FLAC' 
     dest_dir = '/MP3'
-
-
+    
     Converter = LosslessToLossyConverter(source_dir,dest_dir, \
                                          'flac','mp3')
 

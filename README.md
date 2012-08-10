@@ -1,14 +1,21 @@
 flacthis
 ========
 
-To clone a FLAC lossless audio directory structure, turning it into an mp3-converted structure.
+A multithreaded Python-based command line utility that converts lossless FLAC
+ audio files to MP3s or Ogg and preserves the directory structure.
 
-NOTE: No files or directories will ever be deleted. Only new directories and files can be created.
- This offers similar functionality to FlacSquisher, but written in Python and is easy to setup for cronjobs.
+NOTE: No files or directories will ever be deleted. Only new directories and
+ files are created.
+
+I created this when I didn't want to use the Mono libraries needed to use
+ FlacSquisher and wanted something easy to run in a cronjob.
+
 
 Prerequisites:
 
-	- Lame
+	- LAME encoder(for MP3 support)
+
+	- Oggenc encoder (for Ogg support)
 
 	- FLAC
 
