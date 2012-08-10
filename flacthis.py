@@ -356,10 +356,11 @@ class LosslessToLossyConverter:
 
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
+    #logging.basicConfig(level=logging.DEBUG)
 
     source_dir = '/FLAC' 
     dest_dir = '/MP3'
+
     
     Converter = LosslessToLossyConverter(source_dir,dest_dir, \
                                          'flac','mp3')
