@@ -29,9 +29,10 @@ import os
 import time
 #import argparse
 import shutil
+import shlex
 import sys
 import logging
-#import subprocess
+import subprocess
 import mutagen              # ID3 Tags
 import threading
 import multiprocessing      # for cpu count
@@ -41,14 +42,14 @@ import multiprocessing      # for cpu count
 
 decoders = {
             'flac' : ('flac','.flac','', \
-                      '%(exe_name) -c -d "%(input_file)" |'),
+                      '{exe} -c -d "{input_file}" {flags}'),
             }
 
 # Name : (executable_name , extension , flags, stdin command. )
 
 encoders = {
             'mp3' : ('lame','.mp3','-V 0', \
-                     '%(exe_name) - "%(output_file)" %(flags)'),
+                     '{exe} - "{output_file}" {flags}'),
             
             # NOT CURRENTLY IMPLEMENTED
             #'aac' : ('ffmpeg','.m4a','', \
@@ -215,6 +216,7 @@ class LosslessToLossyConverter:
     def encode_and_tagging(self,lossless_file,lossy_file):
         logging.debug('Starting encode_and_tagging. Received: ' \
                       +' ' + lossless_file + ' ' + lossy_file)
+        
         conv_result = self.convert_to_lossy(lossless_file,lossy_file)
     
         # Only ID3 tag if conversion successful
@@ -226,23 +228,42 @@ class LosslessToLossyConverter:
         try:
             lossy_file_tmp = lossy_file + '.tmp'
             
-            command = '{0} -c -d "{1}" | {2} - "{3}" {4}'.format \
-            (self.Source_Codec.path, lossless_file, self.Dest_Codec.path, \
-             lossy_file_tmp, self.Dest_Codec.flags)
+            source_cmd = self.Source_Codec.command.format( \
+                            exe = self.Source_Codec.path, \
+                            input_file = lossless_file, \
+                            flags = self.Source_Codec.flags)
             
-            status = os.system(command)
-        
-            if status == 2 :
-                print("\n\nCancelled by user")
-                raise SystemExit
-            elif status > 0:
-                raise NameError('FlacConversionFailed')
+            logging.debug('source command: ' + source_cmd)
+            
+            dest_cmd = self.Dest_Codec.command.format(  \
+                            exe= self.Dest_Codec.path,
+                            output_file = lossy_file_tmp,
+                            flags = self.Dest_Codec.flags)
+            
+            logging.debug('dest command: ' + dest_cmd)
+                        
+
+            src_args = shlex.split(source_cmd)
+            dest_args = shlex.split(dest_cmd)
+
+            p1 = subprocess.Popen(src_args,stdout=subprocess.PIPE)
+            p2 = subprocess.Popen(dest_args, stdin=p1.stdout)
+
+            output = p2.communicate()[0]
+            
+            logging.debug('Encode output: ' + str(output))
+#            status = os.system(command)
+#            if status == 2 :
+#                print("\n\nCancelled by user")
+#                raise SystemExit
+#            elif status > 0:
+#                raise NameError('FlacConversionFailed')
         
             # Move .tmp after conversion
             shutil.move(lossy_file_tmp, lossy_file)
         
-        except:
-            
+        except Exception, ex:
+            logging.exception('Could not encode')
             self.error_conv.append(lossless_file)
             
             return 1
@@ -319,7 +340,7 @@ class LosslessToLossyConverter:
             # Don't allow more than max_cpu threads to run 
             while self.get_num_of_running_threads() >= self.num_threads: 
                 # Check every 3 seconds if more threads needed
-                time.sleep(3)   
+                time.sleep(1)   
                 
                 
     
