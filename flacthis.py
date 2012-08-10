@@ -52,10 +52,10 @@ encoders = {
                      '{exe} - "{output_file}" {flags}'),
 
             'ogg' : ('oggenc','.ogg','-q 6', \
-                     '{exe} - -o "{output_file}" {flags}'),            
-            # NOT CURRENTLY IMPLEMENTED
-            #'aac' : ('ffmpeg','.m4a','', \
-            #         ''),   
+                     '{exe} - -o "{output_file}" {flags}'),
+                        
+            'aac' : ('faac','.m4a','-q 170', \
+                     '{exe} - -w -o "{output_file}" {flags}'),   
 
             }
 
@@ -358,8 +358,8 @@ class LosslessToLossyConverter:
 def main():
     #logging.basicConfig(level=logging.DEBUG)
 
-    source_dir = '/FLAC' 
-    dest_dir = '/MP3'
+    source_dir = '/nfs/music/lossless/FLAC' 
+    dest_dir = '/nfs/music/lossy/converted_mp3s'
 
     
     Converter = LosslessToLossyConverter(source_dir,dest_dir, \
