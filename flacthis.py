@@ -358,8 +358,8 @@ class LosslessToLossyConverter:
 def main():
     #logging.basicConfig(level=logging.DEBUG)
 
-    source_dir = '/nfs/music/lossless/FLAC' 
-    dest_dir = '/nfs/music/lossy/converted_mp3s'
+    source_dir = '/FLAC' 
+    dest_dir = '/MP3'
 
     
     Converter = LosslessToLossyConverter(source_dir,dest_dir, \
