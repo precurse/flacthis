@@ -1,8 +1,8 @@
 flacthis
 ========
 
-A multithreaded Python-based command line utility that converts lossless FLAC
- audio files to MP3s or Ogg and preserves the directory structure.
+A multithreaded Python-based command line utility that converts lossless FLAC 
+audio files to MP3s, AAC, or Ogg and preserves the directory structure.
 
 NOTE: No files or directories will ever be deleted. Only new directories and
  files are created.
@@ -28,7 +28,7 @@ Prerequisites:
 HOW-TO USE:
 	Currently source and destination directories must be hardcoded in the Python source file.
 
-	To change the destination encoding change to the following:
+	To change the destination encoding, change the Converter line under main() to the following:
 
 	MP3 (default):
 	    Converter = LosslessToLossyConverter(source_dir,dest_dir, \
