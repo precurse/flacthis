@@ -260,18 +260,13 @@ class LosslessToLossyConverter:
             src_args = shlex.split(source_cmd)
             dest_args = shlex.split(dest_cmd)
 
-            p1 = subprocess.Popen(src_args,stdout=subprocess.PIPE)
+            p1 = subprocess.Popen(src_args,stdout=subprocess.PIPE, \
+                                  sterr=subprocess.STDOUT)
             p2 = subprocess.Popen(dest_args, stdin=p1.stdout)
 
             output = p2.communicate()[0]
             
             logging.debug('Encode output: ' + str(output))
-#            status = os.system(command)
-#            if status == 2 :
-#                print("\n\nCancelled by user")
-#                raise SystemExit
-#            elif status > 0:
-#                raise NameError('FlacConversionFailed')
         
             # Move .tmp after conversion
             shutil.move(lossy_file_tmp, lossy_file)
@@ -371,34 +366,31 @@ def main():
     
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('source_dir', help='Source (lossless) directory')
+    parser.add_argument('source_dir', help='Input (lossless) directory')
     parser.add_argument('dest_dir', help='Destination (lossy) directory')
-    parser.add_argument('-d','--dest_codec', default='mp3', 
+    parser.add_argument('-o','--output_codec', default='mp3', 
                         choices=encoders.keys(), 
-                        help='Destination (lossy) codec')
+                        help='Output (lossy) codec (default: mp3)')
     parser.add_argument('--debug', help='Enable debugging', action='store_true')
     
     args = parser.parse_args()
     
-    if args.source_dir:
-        source_dir = args.source_dir
-    
-    if args.dest_dir:
-        dest_dir = args.dest_dir
+    source_dir = args.source_dir
+    dest_dir = args.dest_dir
        
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
     logging.debug('Arguments: ' + str(args))
 
-    source_codec = 'flac'  # Default is flac
-    dest_codec = args.dest_codec
+    input_codec = 'flac'  # Default is flac
+    output_codec = args.output_codec
 
     logging.debug('Passing to Converter: '+source_dir + dest_dir + \
-                                         source_codec +dest_codec)
+                                         input_codec +output_codec)
     
     Converter = LosslessToLossyConverter(source_dir,dest_dir, \
-                                         source_codec,dest_codec)
+                                         input_codec,output_codec)
 
     Converter.start()
     Converter.print_results()
