@@ -16,18 +16,24 @@ Prerequisites:
 
 	- MP3 encoder: [lame] (for MP3 support)
 		- http://sourceforge.net/projects/lame/files/lame/3.99/
+
 	- AAC encoder: [faac] (for AAC support)
 		- http://sourceforge.net/projects/faac/
+
 	- Libav encoder: [avconv] (for Fraunhofer AAC support)
 		- Fraunhofer codec: http://sourceforge.net/projects/opencore-amr/files/fdk-aac/
 		- http://libav.org/download.html
 		- ** Libav must be compiled with "--enable-libfdk-aac" 
+
 	- Ogg encoder: [oggenc] (for Ogg support)
 		- http://www.vorbis.com/
+
 	- FLAC decoder: [flac] 
 		- http://flac.sourceforge.net/download.html
+
 	- Mutagen Python library (used for tagging)
 		- http://code.google.com/p/mutagen/
+
 	- Python2
 		- http://www.python.org/download/
 
@@ -48,4 +54,4 @@ USAGE:
 
 
 
-Run, and enjoy.
+Run, and enjoy. If any issues are encountered, feel free to contact me (andrewklaus@gmail.com).

@@ -133,13 +133,17 @@ class Codec:
         self.version = ''
     
 class LosslessToLossyConverter:
-    def __init__(self,source_dir,dest_dir,source_codec,dest_codec):
+    def __init__(self,source_dir,dest_dir,source_codec,dest_codec,num_threads):
         
         # Remove trailing slashes
         self.source_dir = source_dir.rstrip('/')
         self.dest_dir = dest_dir.rstrip('/')
         
-        self.num_threads = multiprocessing.cpu_count()
+        if num_threads > 0:
+            self.num_threads = num_threads
+        else:
+            # Auto based on cpu count
+            self.num_threads = multiprocessing.cpu_count()
         
         self.Source_Codec = Codec('decoder',source_codec)
         self.Dest_Codec = Codec('encoder',dest_codec)
@@ -247,21 +251,20 @@ class LosslessToLossyConverter:
                             input_file = lossless_file, \
                             flags = self.Source_Codec.flags)
             
-            logging.debug('source command: ' + source_cmd)
+            logging.debug('INPUT command: ' + source_cmd)
             
             dest_cmd = self.Dest_Codec.command.format(  \
                             exe= self.Dest_Codec.path,
                             output_file = lossy_file_tmp,
                             flags = self.Dest_Codec.flags)
             
-            logging.debug('dest command: ' + dest_cmd)
+            logging.debug('OUTPUT command: ' + dest_cmd)
                         
 
             src_args = shlex.split(source_cmd)
             dest_args = shlex.split(dest_cmd)
 
-            p1 = subprocess.Popen(src_args,stdout=subprocess.PIPE, \
-                                  sterr=subprocess.STDOUT)
+            p1 = subprocess.Popen(src_args,stdout=subprocess.PIPE)
             p2 = subprocess.Popen(dest_args, stdin=p1.stdout)
 
             output = p2.communicate()[0]
@@ -371,26 +374,31 @@ def main():
     parser.add_argument('-o','--output_codec', default='mp3', 
                         choices=encoders.keys(), 
                         help='Output (lossy) codec (default: mp3)')
+    parser.add_argument('-t','--threads', type=int, default=0, 
+                        help='Force specific number of threads (default: auto)')    
     parser.add_argument('--debug', help='Enable debugging', action='store_true')
     
     args = parser.parse_args()
     
     source_dir = args.source_dir
     dest_dir = args.dest_dir
-       
+
+    input_codec = 'flac'  # Default is flac
+    output_codec = args.output_codec
+    
+    num_threads = args.threads
+
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
     logging.debug('Arguments: ' + str(args))
 
-    input_codec = 'flac'  # Default is flac
-    output_codec = args.output_codec
 
     logging.debug('Passing to Converter: '+source_dir + dest_dir + \
                                          input_codec +output_codec)
     
     Converter = LosslessToLossyConverter(source_dir,dest_dir, \
-                                         input_codec,output_codec)
+                                         input_codec,output_codec,num_threads)
 
     Converter.start()
     Converter.print_results()
