@@ -28,25 +28,20 @@ Prerequisites:
 
 	- Python2
 
-HOW-TO USE:
-	Currently source and destination directories must be hardcoded in the Python source file. Once arguments are
-accepted, this will no longer be required. 
+USAGE:
 
-	(for now) To change the destination encoding, change the Converter line under main() to the following:
+	usage: flacthis.py [-h] [-d {fdkaac,ogg,mp3,aac}] [--debug]
+		           source_dir dest_dir
 
-	MP3 (default):
-	    Converter = LosslessToLossyConverter(source_dir,dest_dir, \
-	                                         'flac','mp3')
-	AAC:
-	    Converter = LosslessToLossyConverter(source_dir,dest_dir, \
-        	                                 'flac','aac')
+	positional arguments:
+	  source_dir            Source (lossless) directory
+	  dest_dir              Destination (lossy) directory
 
-	Fraunhofer AAC:
-            Converter = LosslessToLossyConverter(source_dir,dest_dir, \
-                                                 'flac','fdkaac')
+	optional arguments:
+	  -h, --help            show this help message and exit
+	  -d {fdkaac,ogg,mp3,aac}, --dest_codec {fdkaac,ogg,mp3,aac}
+		                Destination (lossy) codec
+	  --debug               Enable debugging
 
-	Ogg Vorbis:
-	    Converter = LosslessToLossyConverter(source_dir,dest_dir, \
-                	                         'flac','ogg')
 
 Run, and enjoy.
