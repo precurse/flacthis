@@ -313,17 +313,17 @@ class LosslessToLossyConverter:
         if count_failed_conv > 0:
             output += '{} songs failed to convert\n'.format(count_failed_conv)
         else:
-            output += 'No conversion errors\n'
+            output += '0 conversion errors\n'
     
         if count_failed_id3 > 0:
             output += '{} ID3 tags failed to write\n'.format(count_failed_id3)    
         else:
-            output += 'No ID3 tag errors\n'
+            output += '0 ID3 tag errors\n'
                 
         if self.success > 0:
             output += '{} songs successfully converted'.format(self.success)
         else:
-            output += 'No songs converted'
+            output += '0 songs converted'
     
         print(output)
 

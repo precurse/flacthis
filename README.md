@@ -37,9 +37,9 @@ Prerequisites:
 	- Python2
 		- http://www.python.org/download/
 
-USAGE:
+Usage:
 
-	usage: flacthis.py [-h] [-o {fdkaac,ogg,mp3,aac}] [--debug]
+	usage: flacthis.py [-h] [-o {fdkaac,ogg,mp3,aac}] [-t THREADS] [--debug]
 		           source_dir dest_dir
 
 	positional arguments:
@@ -50,8 +50,39 @@ USAGE:
 	  -h, --help            show this help message and exit
 	  -o {fdkaac,ogg,mp3,aac}, --output_codec {fdkaac,ogg,mp3,aac}
 		                Output (lossy) codec (default: mp3)
+	  -t THREADS, --threads THREADS
+		                Force specific number of threads (default: auto)
 	  --debug               Enable debugging
 
+
+Benchmarks:
+
+	System: Intel i5-750 w/ Intel 520 120GB SSD 
+	Command: Using Linux time command and flacthis -t 1,2,3,4 (lame encoder with -V 0 flags):
+
+	3 albums (39 songs)
+	Input: 1.7GB
+	Output: 471.5MB
+
+	1 Thread: 
+		real	7m33.512s
+		user	7m20.371s
+		sys	0m8.363s
+
+	2 Threads:
+		real	4m5.559s
+		user	7m37.347s
+		sys	0m7.729s
+
+	3 Threads:
+		real	2m59.474s
+		user	8m2.432s
+		sys	0m7.150s
+
+	4 Threads:
+		real	2m20.317s
+		user	8m4.628s
+		sys	0m6.426s
 
 
 Run, and enjoy. If any issues are encountered, feel free to contact me (andrewklaus@gmail.com).
