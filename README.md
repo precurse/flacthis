@@ -18,6 +18,8 @@ Prerequisites:
 
 	- AAC encoder: [faac] (for AAC support)
 
+	- Libavc encoder: [avconv] (for Fraunhofer AAC support)
+
 	- Ogg encoder: [oggenc] (for Ogg support)
 
 	- FLAC decoder: [flac] 
@@ -39,7 +41,11 @@ accepted, this will no longer be required.
 	    Converter = LosslessToLossyConverter(source_dir,dest_dir, \
         	                                 'flac','aac')
 
-	OGG
+        Fraunhofer AAC:
+            Converter = LosslessToLossyConverter(source_dir,dest_dir, \
+                                                 'flac','fdkaac')
+
+	Ogg Vorbis:
 	    Converter = LosslessToLossyConverter(source_dir,dest_dir, \
                 	                         'flac','ogg')
 

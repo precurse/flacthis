@@ -39,6 +39,7 @@ import multiprocessing      # for cpu count
 
 
 # Name : (executable_name , extension , pipe command (stdout)
+# Decoders must send to stdout
 
 decoders = {
             'flac' : ('flac','.flac','', \
@@ -46,6 +47,7 @@ decoders = {
             }
 
 # Name : (executable_name , extension , flags, stdin command. )
+# Encoders must read from stdin
 
 encoders = {
             'mp3' : ('lame','.mp3','-V 0', \
@@ -56,6 +58,9 @@ encoders = {
                         
             'aac' : ('faac','.m4a','-q 170', \
                      '{exe} - -w -o "{output_file}" {flags}'),   
+
+            'fdkaac' : ('avconv','.m4a','+qscale -global_quality 5 -afterburner 1', \
+                     '{exe} -i - -c:a libfdk_aac -flags {flags} "{output_file}"'),  
 
             }
 
@@ -99,8 +104,11 @@ class Codec:
     def __check_default_path__(self):
         """ Searches the default path for a specific named encoder """
     
-        def_paths = os.path.defpath.split(':')
-    
+        #def_paths = os.path.defpath.split(':')
+        def_paths = os.environ["PATH"].split(':')
+        
+        logging.debug('Checking paths: ' + os.environ["PATH"] )
+        
         # Check if encoder in default path exists
         for path in def_paths:
             current = os.path.join(path,self.name)
@@ -110,7 +118,7 @@ class Codec:
                 return current
     
         # Encoder not found if reached here
-        raise NameError('CodecNotFoundInDefaultPath')
+        raise NameError('CodecNotFoundInDefaultPaths ' + os.path.defpath)
 
     def __check_executable__(self):
         """ Checks if executable is executable """
@@ -228,8 +236,12 @@ class LosslessToLossyConverter:
     def convert_to_lossy(self,lossless_file,lossy_file):
 
         try:
-            lossy_file_tmp = lossy_file + '.tmp'
-            
+            # avconv complains when .m4a.tmp files are used as output.
+            # Therefore we need to make extension: .tmp.m4a 
+            #lossy_file_tmp = lossy_file + '.tmp'
+            lossy_file_tmp = os.path.splitext(lossy_file)[0] + \
+                            '.tmp' + self.Dest_Codec.ext
+             
             source_cmd = self.Source_Codec.command.format( \
                             exe = self.Source_Codec.path, \
                             input_file = lossless_file, \
@@ -341,7 +353,7 @@ class LosslessToLossyConverter:
          
             # Don't allow more than max_cpu threads to run 
             while self.get_num_of_running_threads() >= self.num_threads: 
-                # Check every 3 seconds if more threads needed
+                # Check every second if more threads are needed
                 time.sleep(1)   
                 
                 
@@ -356,11 +368,11 @@ class LosslessToLossyConverter:
 
 
 def main():
+    # To view debugging information, uncomment this line:
     #logging.basicConfig(level=logging.DEBUG)
 
     source_dir = '/FLAC' 
     dest_dir = '/MP3'
-
     
     Converter = LosslessToLossyConverter(source_dir,dest_dir, \
                                          'flac','mp3')
