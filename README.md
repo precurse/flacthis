@@ -41,7 +41,7 @@ accepted, this will no longer be required.
 	    Converter = LosslessToLossyConverter(source_dir,dest_dir, \
         	                                 'flac','aac')
 
-        Fraunhofer AAC:
+	Fraunhofer AAC:
             Converter = LosslessToLossyConverter(source_dir,dest_dir, \
                                                  'flac','fdkaac')
 
