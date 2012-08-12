@@ -12,32 +12,34 @@ NOTE: No files or directories will ever be deleted. Only new directories and
  and over again and only needing to encode new content.
 
 
-Prerequisites:
+Prerequisites
+--------------
 
-	- MP3 encoder: [lame] (for MP3 support)
-		- http://sourceforge.net/projects/lame/files/lame/3.99/
+	* MP3 encoder: [lame] (for MP3 support)
+		+ http://sourceforge.net/projects/lame/files/lame/3.99/
 
-	- AAC encoder: [faac] (for AAC support)
-		- http://sourceforge.net/projects/faac/
+	* AAC encoder: [faac] (for AAC support)
+		+ http://sourceforge.net/projects/faac/
 
-	- Libav encoder: [avconv] (for Fraunhofer AAC support)
-		- Fraunhofer codec: http://sourceforge.net/projects/opencore-amr/files/fdk-aac/
-		- http://libav.org/download.html
-		- ** Libav must be compiled with "--enable-libfdk-aac" 
+	* Libav encoder: [avconv] (for Fraunhofer AAC support)
+		+ Fraunhofer codec: http://sourceforge.net/projects/opencore-amr/files/fdk-aac/
+		+ http://libav.org/download.html
+		+ ** Libav must be compiled with "--enable-libfdk-aac" 
 
-	- Ogg encoder: [oggenc] (for Ogg support)
-		- http://www.vorbis.com/
+	* Ogg encoder: [oggenc] (for Ogg support)
+		+ http://www.vorbis.com/
 
-	- FLAC decoder: [flac] 
-		- http://flac.sourceforge.net/download.html
+	* FLAC decoder: [flac] 
+		+ http://flac.sourceforge.net/download.html
 
-	- Mutagen Python library (used for tagging)
-		- http://code.google.com/p/mutagen/
+	* Mutagen Python library (used for tagging)
+		+ http://code.google.com/p/mutagen/
 
-	- Python2
-		- http://www.python.org/download/
+	* Python2
+		+ http://www.python.org/download/
 
-Usage:
+Usage
+------
 
 	usage: flacthis.py [-h] [-o {fdkaac,ogg,mp3,aac}] [-t THREADS] [--debug]
 		           source_dir dest_dir
@@ -55,7 +57,8 @@ Usage:
 	  --debug               Enable debugging
 
 
-Benchmarks:
+Benchmarks
+-----------
 
 	System: Intel i5-750 w/ Intel 520 120GB SSD 
 	Command: Using Linux time command and flacthis -t 1,2,3,4 (lame encoder with -V 0 flags):
@@ -80,9 +83,14 @@ Benchmarks:
 		sys	0m7.150s
 
 	4 Threads:
-		real	2m20.317s
-		user	8m4.628s
-		sys	0m6.426s
+		real	2m9.415s
+		user	8m3.955s
+		sys	0m6.166s
+
+	5 Threads:
+		real	2m5.893s
+		user	8m3.455s
+		sys	0m6.090s
 
 
 Run, and enjoy. If any issues are encountered, feel free to contact me (andrewklaus@gmail.com).
