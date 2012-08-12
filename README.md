@@ -15,21 +15,21 @@ NOTE: No files or directories will ever be deleted. Only new directories and
 Prerequisites
 --------------
 
-* MP3 encoder: [lame] (for MP3 support)
+* MP3 encoder for MP3 support: (lame)
 	+ http://sourceforge.net/projects/lame/files/lame/3.99/
 
-* AAC encoder: [faac] (for AAC support)
+* AAC encoder for AAC support: (faac)
 	+ http://sourceforge.net/projects/faac/
 
-* Libav encoder: [avconv] (for Fraunhofer AAC support)
+* Libav encoder for Fraunhofer AAC support: (avconv)
 	+ Fraunhofer codec: http://sourceforge.net/projects/opencore-amr/files/fdk-aac/
 	+ http://libav.org/download.html
-	+ ** Libav must be compiled with "--enable-libfdk-aac" 
+		-  Libav must be compiled with "--enable-libfdk-aac" 
 
-* Ogg encoder: [oggenc] (for Ogg support)
+* Ogg encoder for Ogg support: (oggenc)
 	+ http://www.vorbis.com/
 
-* FLAC decoder: [flac] 
+* FLAC decoder: (flac) 
 	+ http://flac.sourceforge.net/download.html
 
 * Mutagen Python library (used for tagging)
