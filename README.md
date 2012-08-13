@@ -41,15 +41,18 @@ Prerequisites
 Usage
 ------
 
-	usage: flacthis.py [-h] [-o {fdkaac,ogg,mp3,aac}] [-t THREADS] [--debug]
+	usage: flacthis.py [-h] [-i {wav,flac}] [-o {fdkaac,ogg,mp3,aac}] [-t THREADS]
+		           [--debug]
 		           source_dir dest_dir
 
 	positional arguments:
 	  source_dir            Input (lossless) directory
-	  dest_dir              Destination (lossy) directory
+	  dest_dir              Output (lossy) directory
 
 	optional arguments:
 	  -h, --help            show this help message and exit
+	  -i {wav,flac}, --input_codec {wav,flac}
+		                Output (lossy) codec (default: mp3)
 	  -o {fdkaac,ogg,mp3,aac}, --output_codec {fdkaac,ogg,mp3,aac}
 		                Output (lossy) codec (default: mp3)
 	  -t THREADS, --threads THREADS
@@ -61,7 +64,7 @@ Benchmarks
 -----------
 
 	System: Intel i5-750 w/ Intel 520 120GB SSD 
-	Command: Using Linux time command and flacthis -t 1,2,3,4 (lame encoder with -V 0 flags):
+	Command: Using Linux time command and flacthis -t 1,2,3,4, or 5 (lame encoder with -V 0 flags):
 
 	3 albums (39 songs)
 	Input: 1.7GB

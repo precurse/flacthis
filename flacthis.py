@@ -44,6 +44,9 @@ import multiprocessing      # for cpu count
 decoders = {
             'flac' : ('flac','.flac','', \
                       '{exe} -c -d "{input_file}" {flags}'),
+            
+            'wav' : ('cat','.wav','', \
+                      '{exe} "{input_file}"'),            
             }
 
 # Name : (executable_name , extension , flags, stdin command. )
@@ -370,7 +373,10 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('source_dir', help='Input (lossless) directory')
-    parser.add_argument('dest_dir', help='Destination (lossy) directory')
+    parser.add_argument('dest_dir', help='Output (lossy) directory')
+    parser.add_argument('-i','--input_codec', default='flac', 
+                        choices=decoders.keys(), 
+                        help='Output (lossy) codec (default: mp3)')
     parser.add_argument('-o','--output_codec', default='mp3', 
                         choices=encoders.keys(), 
                         help='Output (lossy) codec (default: mp3)')
