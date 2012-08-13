@@ -376,7 +376,7 @@ def main():
     parser.add_argument('dest_dir', help='Output (lossy) directory')
     parser.add_argument('-i','--input_codec', default='flac', 
                         choices=decoders.keys(), 
-                        help='Output (lossy) codec (default: mp3)')
+                        help='Input (lossless) codec (default: flac)')
     parser.add_argument('-o','--output_codec', default='mp3', 
                         choices=encoders.keys(), 
                         help='Output (lossy) codec (default: mp3)')
