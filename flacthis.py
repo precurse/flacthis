@@ -420,7 +420,7 @@ def main():
                         help='Output (lossy) codec (default: mp3)')
     parser.add_argument('-t','--threads', type=int, default=0, 
                         help='Force specific number of threads (default: auto)')
-    parser.add_argument('--noid3', action='store_true', \
+    parser.add_argument('--noid3', action='store_true', default=False, \
                         help = 'Disable ID3 file tagging (does not require Mutagen)')    
     parser.add_argument('--debug', help='Enable debugging', action='store_true')
     
@@ -434,15 +434,16 @@ def main():
     
     num_threads = args.threads
 
-    if args.noid3:
-        logging.debug('Disabling ID3 tagging')
-        disable_id3 = True
+    if args.noid3 == True:
+        disable_id3 = args.noid3
     else:
+        disable_id3 = args.noid3
         try:
             import mutagen
         except ImportError:
             sys.exit("""You require the Mutagen Python module
                     install it from http://code.google.com/p/mutagen/""")
+        
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
