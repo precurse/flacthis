@@ -17,9 +17,11 @@ Prerequisites
 
 * MP3 encoder for MP3 support: (lame)
 	+ http://sourceforge.net/projects/lame/files/lame/3.99/
+	+ Windows binary: http://www.rarewares.org/files/mp3/lame3.99.5.zip
 
 * AAC encoder for AAC support: (faac)
 	+ http://sourceforge.net/projects/faac/
+	+ Windows binary: http://www.rarewares.org/files/aac/faac-1.28-mod.zip
 
 * Libav encoder for Fraunhofer AAC support: (avconv)
 	+ Fraunhofer codec: http://sourceforge.net/projects/opencore-amr/files/fdk-aac/
@@ -28,11 +30,13 @@ Prerequisites
 
 * Ogg encoder for Ogg support: (oggenc)
 	+ http://www.vorbis.com/
+	+ Windows binary: http://www.rarewares.org/files/ogg/oggenc2.87-1.3.3-generic.zip
 
 * FLAC decoder: (flac) 
 	+ http://flac.sourceforge.net/download.html
+	+ Windows binary: http://www.rarewares.org/files/lossless/flac-1.2.1b.zip
 
-* Mutagen Python library (used for tagging)
+* Mutagen Python library (used for tagging, but requirement can be disabled with --noid3 flag)
 	+ http://code.google.com/p/mutagen/
 
 * Python2
@@ -42,7 +46,7 @@ Usage
 ------
 
 	usage: flacthis.py [-h] [-i {wav,flac}] [-o {fdkaac,ogg,mp3,aac}] [-t THREADS]
-		           [--debug]
+		           [--noid3] [--debug]
 		           source_dir dest_dir
 
 	positional arguments:
@@ -57,7 +61,9 @@ Usage
 		                Output (lossy) codec (default: mp3)
 	  -t THREADS, --threads THREADS
 		                Force specific number of threads (default: auto)
+	  --noid3               Disable ID3 file tagging (does not require Mutagen)
 	  --debug               Enable debugging
+
 
 
 

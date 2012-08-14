@@ -38,6 +38,7 @@ import threading
 import multiprocessing      # for cpu count
 
 
+
 # Name : (executable_name , extension , pipe command (stdout)
 # Decoders must send to stdout
 
@@ -66,6 +67,12 @@ encoders = {
                      '{exe} -i - -c:a libfdk_aac -flags {flags} "{output_file}"'),  
 
             }
+
+windows_binaries = ('http://www.rarewares.org/files/aac/faac-1.28-mod.zip',
+                    'http://www.rarewares.org/files/lossless/flac-1.2.1b.zip',
+                    'http://www.rarewares.org/files/mp3/lame3.99.5.zip',
+                    'http://www.rarewares.org/files/ogg/oggenc2.87-1.3.3-generic.zip',
+                    )
 
 class Codec:
     def __init__(self,codec_type='decoder',name='flac'):
@@ -165,7 +172,8 @@ class Codec:
         self.version = ''
     
 class LosslessToLossyConverter:
-    def __init__(self,source_dir,dest_dir,source_codec,dest_codec,num_threads):
+    def __init__(self,source_dir,dest_dir,source_codec,dest_codec, \
+                 num_threads,disable_id3=False):
         
         # Remove trailing slashes
         self.source_dir = source_dir.rstrip('/')
@@ -185,6 +193,7 @@ class LosslessToLossyConverter:
         self.success = 0        # Successful conversions
         self.error_conv = []    # List of error conversions
         self.error_id3 = []     # List of error id3 tags
+        self.disable_id3 = disable_id3
 
     def get_convert_list(self):
         """Populates list with files needing conversion."""
@@ -265,8 +274,8 @@ class LosslessToLossyConverter:
         
         conv_result = self.convert_to_lossy(lossless_file,lossy_file)
     
-        # Only ID3 tag if conversion successful
-        if conv_result == 0:
+        # Only ID3 tag if conversion successful and if not disabled
+        if conv_result == 0 and self.disable_id3 == False:
             self.update_lossy_tags(lossless_file,lossy_file)
 
     def convert_to_lossy(self,lossless_file,lossy_file):
@@ -410,7 +419,9 @@ def main():
                         choices=encoders.keys(), 
                         help='Output (lossy) codec (default: mp3)')
     parser.add_argument('-t','--threads', type=int, default=0, 
-                        help='Force specific number of threads (default: auto)')    
+                        help='Force specific number of threads (default: auto)')
+    parser.add_argument('--noid3', action='store_true', \
+                        help = 'Disable ID3 file tagging (does not require Mutagen)')    
     parser.add_argument('--debug', help='Enable debugging', action='store_true')
     
     args = parser.parse_args()
@@ -423,6 +434,16 @@ def main():
     
     num_threads = args.threads
 
+    if args.noid3:
+        logging.debug('Disabling ID3 tagging')
+        disable_id3 = True
+    else:
+        try:
+            import mutagen
+        except ImportError:
+            sys.exit("""You require the Mutagen Python module
+                    install it from http://code.google.com/p/mutagen/""")
+
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
@@ -433,7 +454,8 @@ def main():
                                          input_codec +output_codec)
     
     Converter = LosslessToLossyConverter(source_dir,dest_dir, \
-                                         input_codec,output_codec,num_threads)
+                                         input_codec,output_codec,
+                                         num_threads,disable_id3)
 
     Converter.start()
     Converter.print_results()
