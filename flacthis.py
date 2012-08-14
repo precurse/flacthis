@@ -76,12 +76,20 @@ class Codec:
         self.__get_version__()
 
     def __set_codec__(self,codec_type,name):
+        """ This function initializes all the variables for the class 
+        """
+        logging.debug("Starting set codec")
+        
+        self.codec_type = codec_type
         
         if codec_type == 'decoder' and name in decoders:
-            self.name = decoders[name][0]
-            self.ext = decoders[name][1]
+            self.name = decoders[name][0]   # e.g. flac
+            self.ext = decoders[name][1]    # e.g. .flac
             self.flags = decoders[name][2]
             self.command = decoders[name][3]
+            
+            if sys.platform == 'win32':
+                self.name += '.exe'
             
         elif codec_type == 'encoder' and name in encoders:
             self.name = encoders[name][0]
@@ -89,15 +97,20 @@ class Codec:
             self.flags = encoders[name][2]
             self.command = encoders[name][3]
 
+            if sys.platform == 'win32':
+                self.name += '.exe'
+
         else:
             raise NameError('InvalidCodec')
 
-        self.codec_type = codec_type
+
         
     def __find_exe__(self):
+        logging.debug("Finding exe")
         
         if os.path.isfile(self.name):
-            pass    # full encoder path passed in
+            self.path = self.name
+            logging.debug('Codec found in current folder')   
         else:
             self.path = self.__check_default_path__()
             logging.debug('Codec found at: ' + self.path)
@@ -106,11 +119,26 @@ class Codec:
         
     def __check_default_path__(self):
         """ Searches the default path for a specific named encoder """
-    
-        #def_paths = os.path.defpath.split(':')
-        def_paths = os.environ["PATH"].split(':')
+        logging.debug('Looking through default path for codec')
         
-        logging.debug('Checking paths: ' + os.environ["PATH"] )
+        def_paths = []
+        
+        # Check script directory first
+        def_paths.append(os.getcwd())
+        
+        if sys.platform == 'win32':
+            #def_paths = os.environ["PATH"].split(';')
+            logging.debug('Found to be running on Windows')
+            def_paths.extend(os.environ["PATH"].split(';'))
+        else:
+            #def_paths = os.environ["PATH"].split(':')
+            logging.debug('Found to be not running on Windows')
+            def_paths.extend(os.environ["PATH"].split(':'))
+            
+
+        
+        
+        logging.debug('Checking paths: ' + str(def_paths) )
         
         # Check if encoder in default path exists
         for path in def_paths:
@@ -121,13 +149,14 @@ class Codec:
                 return current
     
         # Encoder not found if reached here
-        raise NameError('CodecNotFoundInDefaultPaths ' + os.path.defpath)
+        raise NameError('CodecNotFoundInDefaultPaths ' + str(def_paths))
 
     def __check_executable__(self):
         """ Checks if executable is executable """
         
         if os.access(self.path,os.X_OK) is False:
-            raise NameError('CodecNotExecutable')   
+            raise NameError('CodecNotExecutable' )
+            logging.debug("Not executable at: " + self.path)   
     
     def __get_version__(self):
         """ Gets version information about the codec """
