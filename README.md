@@ -1,8 +1,8 @@
 flacthis
 ========
 
-A multithreaded Python-based command line utility that converts lossless FLAC 
-or WAV audio files to MP3s, AAC, or Ogg and preserves the directory structure.
+A multithreaded and multi-platform Python-based command line utility that converts
+lossless FLAC or WAV audio files to MP3s, AAC, or Ogg and preserves the directory structure.
 
 I created this when I didn't want to use the Mono libraries needed to use
  FlacSquisher and wanted something easy to run in a cronjob.
@@ -10,6 +10,10 @@ I created this when I didn't want to use the Mono libraries needed to use
 NOTE: No files or directories will ever be deleted. Only new directories and
  files are created. The purpose of this utility is to be able to run it over
  and over again and only needing to encode new content.
+
+This has been tested on Arch Linux and Windows 7. There's no reason why it
+ wouldn't work on other versions either - assuming the converion binaries are
+ available.
 
 
 Prerequisites
@@ -103,4 +107,4 @@ Benchmarks
 		sys	0m6.090s
 
 
-Run, and enjoy. If any issues are encountered, feel free to contact me (andrewklaus@gmail.com).
+Run, and enjoy. If any issues are encountered, feel free to contact me at andrewklaus@gmail.com.
