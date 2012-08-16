@@ -11,9 +11,9 @@ NOTE: No files or directories will ever be deleted. Only new directories and
  files are created. The purpose of this utility is to be able to run it over
  and over again and only needing to encode new content.
 
-This has been tested on Arch Linux and Windows 7. There's no reason why it
- wouldn't work on other versions either - assuming the converion binaries are
- available.
+This has been primarily developed on Arch Linux, but has been confirmed working on
+ Windows 7 as well. There's no reason why it wouldn't work on other versions either - 
+ assuming the conversion binaries are available to the script.
 
 
 Prerequisites
