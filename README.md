@@ -6,41 +6,14 @@ lossless FLAC or WAV audio files to MP3s, AAC, or Ogg and preserves the director
 
 I created this when I didn't want to use the Mono libraries needed to use
  other alternatives and wanted something easy to run in a cronjob.
-
+ 
+This has been designed to be as modular as possible. Any type of codec that supports
+ writing to/from stdin/out can be added with minimal effort. I've supported the majority
+ of mainstream codecs, but if there are others you want added, please email me!
+ 
 NOTE: No files or directories will ever be deleted. Only new directories and
- files are created. The purpose of this utility is to be able to run it over
- and over again and only needing to encode new content. 
-
-Prerequisites
---------------
-
-* MP3 encoder for MP3 support: (lame)
-	+ http://sourceforge.net/projects/lame/files/lame/3.99/
-	+ Windows binary: http://www.rarewares.org/files/mp3/lame3.99.5.zip
-
-* AAC encoder for AAC support: (faac)
-	+ http://sourceforge.net/projects/faac/
-	+ Windows binary: http://www.rarewares.org/files/aac/faac-1.28-mod.zip
-
-* ffmpeg or libav encoder for Fraunhofer AAC support: (ffmpeg or avconv)
-	+ Fraunhofer codec: http://sourceforge.net/projects/opencore-amr/files/fdk-aac/
-	+ http://libav.org/download.html
-	+ http://ffmpeg.org/download.html
-		-  Both must be compiled with "--enable-libfdk-aac" 
-
-* Ogg encoder for Ogg support: (oggenc)
-	+ http://www.vorbis.com/
-	+ Windows binary: http://www.rarewares.org/files/ogg/oggenc2.87-1.3.3-generic.zip
-
-* FLAC decoder: (flac) 
-	+ http://flac.sourceforge.net/download.html
-	+ Windows binary: http://www.rarewares.org/files/lossless/flac-1.2.1b.zip
-
-* Mutagen Python library (used for tagging, but requirement can be disabled with --noid3 flag)
-	+ http://code.google.com/p/mutagen/
-
-* Python2 (tested on 2.7.5)
-	+ http://www.python.org/download/
+ files are created. The purpose of this utility is to be able to run it on a regular
+ basis and only needing to encode new content. 
 
 Usage
 ------
@@ -66,6 +39,40 @@ Usage
 	                        Mutagen)
 	  --debug               Enable debugging
 
+
+Supported Codecs
+--------------
+
+  Codec:  (Command used)
+* FLAC decoder: (flac)
+
+* WAV decoder: ('cat' in *nix and 'type' in Windows)
+
+* MP3 encoder: (lame)
+
+* AAC encoder: (faac)
+
+* ffmpeg or libav encoder for Fraunhofer AAC support: (ffmpeg or avconv)
+	+ Fraunhofer codec: http://sourceforge.net/projects/opencore-amr/files/fdk-aac/
+	+ Both must be compiled with "--enable-libfdk-aac".
+
+* Ogg encoder: (oggenc)
+
+Most of these can be downloaded easily from rarewares.org on Windows, or installed from
+ your friendly neighbourhood package manager (Linux, BSD).
+
+Requirements
+-------------
+
+* Python2 (tested on 2.7.5)
+
+* A supported decoder from above list
+
+* A supported encoder from above list
+
+* Mutagen Python Library (Optional, but highly recommended)
+    + Used for ID3 tagging, but requirement can be disabled with --noid3 flag
+	+ http://code.google.com/p/mutagen/
 
 
 Benchmarks

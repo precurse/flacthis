@@ -1,4 +1,3 @@
-#!/usr/bin/python2
 '''
 Copyright (c) 2013, Andrew Klaus <andrewklaus@gmail.com>
 All rights reserved.
@@ -199,7 +198,7 @@ class FLACDecoder(Codec):
                  exec_file="flac",
                  ext=".flac",
                  flags="",
-                 cmd_seq = """{exe} -c -d "{input_file}" {flags}"""):
+                 cmd_seq = """{exe} -s -c -d "{input_file}" {flags}"""):
 
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
         
@@ -263,7 +262,7 @@ class FfmpegLibFdkEncoder(Codec):
                  exec_file="ffmpeg",
                  ext=".m4a",
                  flags="-vbr 3",
-                 cmd_seq = """{exe} -i - -c:a libfdk_aac {flags} "{output_file}" """):
+                 cmd_seq = """{exe} -v 0 -i - -c:a libfdk_aac {flags} "{output_file}" """):
         
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
 
@@ -289,7 +288,7 @@ class MP3Encoder(Codec):
                  exec_file="lame",
                  ext=".mp3",
                  flags="-V 0",
-                 cmd_seq = """{exe} - "{output_file}" {flags}"""):
+                 cmd_seq = """{exe} - "{output_file}" --silent {flags}"""):
         
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
 
@@ -319,6 +318,12 @@ class OGGEncoder(Codec):
             self.version = version.strip()   
 
 class CodecManager(object):
+    """
+        Manager for all supported codecs.
+        
+        discover_codecs() must be run before trying to select a codec
+         
+    """
     __decoders__ = (FLACDecoder,
                     WAVDecoder,
                     WINWAVDecoder)
@@ -333,10 +338,8 @@ class CodecManager(object):
         self._avail_decoders = []
         self._avail_encoders = []
         
-        # Add all valid decoders and encoders to list
-        self._discover_codecs()
-    
-    def _discover_codecs(self):
+
+    def discover_codecs(self):
         """
             Looks through all codecs at which are available
              to the system
@@ -411,8 +414,6 @@ class CodecManager(object):
     
         logger.debug("Returning {}".format(str(encoder)))
         return encoder
-
-    
 
     def list_all_decoders(self):
         """

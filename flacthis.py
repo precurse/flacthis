@@ -298,27 +298,7 @@ class LosslessToLossyConverter:
                 continue
             t.join()
 
-
-
-def main():
-    print("flacthis {version} Copyright (c) 2012-2013 Andrew Klaus (andrewklaus@gmail.com)\n"\
-          .format(version=__version__))
-    
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger("main")
-
-    try:
-        CodecMgr = audio_codecs.CodecManager()
-    except audio_codecs.NoSystemDecodersFound:
-        print("Please install a valid decoder before running")
-    except audio_codecs.NoSystemEncodersFound:
-        print("Please install a valid encoder before running")
-    
-    #avail_decoders = CodecMgr.get_avail_decoders()
-    #avail_encoders = CodecMgr.get_avail_encoders()
-    all_decoders = CodecMgr.list_all_decoders()
-    all_encoders = CodecMgr.list_all_encoders()
-
+def setup_parsing(decoders, encoders):
     parser = argparse.ArgumentParser()
     parser.add_argument('source_dir',
                         help='Input (lossless) directory')
@@ -327,12 +307,12 @@ def main():
     parser.add_argument('-i',
                         '--input_codec',
                         default='flac', 
-                        choices=all_decoders, 
+                        choices=decoders, 
                         help='Input (lossless) codec (default: flac)')
     parser.add_argument('-o',
                         '--output_codec',
                         default='mp3', 
-                        choices=all_encoders, 
+                        choices=encoders, 
                         help='Output (lossy) codec (default: mp3)')
     parser.add_argument('-t',
                         '--threads',
@@ -347,21 +327,51 @@ def main():
                         help='Enable debugging',
                         action='store_true')
     
-    args = parser.parse_args()
+    return parser
+    
 
-
-    # Setup debugging
-    if args.debug:
+def setup_logging(debug=False):
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("main")
+    
+    if debug:
         logger.setLevel(logging.DEBUG)
         logging.getLogger("audio_codecs").setLevel(logging.DEBUG)
-        logger.debug('Arguments: ' + str(args))
     else:
         logger.setLevel(logging.INFO)
         logging.getLogger("audio_codecs").setLevel(logging.INFO)
-   
+        
+    return logger
+
+def main():
+    print("flacthis {version} Copyright (c) 2012-2013 Andrew Klaus (andrewklaus@gmail.com)\n"\
+          .format(version=__version__))
+    
+    try:
+        CodecMgr = audio_codecs.CodecManager()
+    except Exception as e:
+        print("an unknown error has occurred: {}".format(str(e)))
+
+    decoders = CodecMgr.list_all_decoders()
+    encoders = CodecMgr.list_all_encoders()
+    
+    args = setup_parsing(decoders,encoders).parse_args()
+    logger = setup_logging(args.debug)
+    logger.debug('Arguments: ' + str(args))
+       
     source_dir = args.source_dir
     dest_dir = args.dest_dir
     thread_count = args.threads
+
+
+    try:
+        CodecMgr.discover_codecs()
+    except audio_codecs.NoSystemDecodersFound:
+        print("Please install a valid decoder before running")
+        sys.exit(1)
+    except audio_codecs.NoSystemEncodersFound:
+        print("Please install a valid encoder before running")
+        sys.exit(1)
 
     # Setup codecs
     try:
@@ -393,9 +403,15 @@ def main():
                     install it from http://code.google.com/p/mutagen/""")
     
 
- 
-    logger.debug('Passing to Converter: '+source_dir + dest_dir + \
-                                          str(Decoder) + str(Encoder))
+    logger.debug("""Source Directory: {}
+                    Dest Directory: {}
+                    Decoder: {}
+                    Encoder: {}
+                """.format(source_dir,
+                           dest_dir,
+                           str(Decoder),
+                           str(Encoder)))
+
 
     Converter = LosslessToLossyConverter(source_dir,
                                          dest_dir, 
