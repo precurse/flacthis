@@ -1,7 +1,7 @@
 flacthis
 ========
 
-A multithreaded and multi-platform Python-based command line utility that converts
+A multithreaded and multi-platform BSD licensed Python-based command line utility that converts
 lossless FLAC or WAV audio files to MP3s, AAC, or Ogg and preserves the directory structure.
 
 I created this when I didn't want to use the Mono libraries needed to use
@@ -10,11 +10,6 @@ I created this when I didn't want to use the Mono libraries needed to use
 NOTE: No files or directories will ever be deleted. Only new directories and
  files are created. The purpose of this utility is to be able to run it over
  and over again and only needing to encode new content.
-
-This has been primarily developed on Arch Linux, but has been confirmed working on
- Windows 7 as well. There's no reason why it wouldn't work on other versions either - 
- assuming the conversion binaries are available to the script.
-
 
 Prerequisites
 --------------
@@ -43,7 +38,7 @@ Prerequisites
 * Mutagen Python library (used for tagging, but requirement can be disabled with --noid3 flag)
 	+ http://code.google.com/p/mutagen/
 
-* Python2
+* Python2 (tested on 2.7.5)
 	+ http://www.python.org/download/
 
 Usage

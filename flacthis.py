@@ -1,6 +1,6 @@
 #!/usr/bin/python2
 '''
-Copyright (c) 2012, Andrew Klaus <andrewklaus@gmail.com>
+Copyright (c) 2013, Andrew Klaus <andrewklaus@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -24,169 +24,50 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
+__version__ = "1.0"
+
 
 import os
 import time
-import argparse
 import shutil
 import shlex
 import sys
 import logging
 import subprocess
-import mutagen              # ID3 Tags
 import threading
 import multiprocessing      # for cpu count
+import argparse
+try:
+    import mutagen              # ID3 Tags, Imported if selected from command line
+except ImportError:
+    pass
+import audio_codecs 
 
 
 
-# Name : (executable_name , extension , pipe command (stdout)
-# Decoders must send to stdout
-
-decoders = {
-            'flac' : ('flac','.flac','', \
-                      '{exe} -c -d "{input_file}" {flags}'),
-            
-            'wav' : ('cat','.wav','', \
-                      '{exe} "{input_file}"'),            
-            }
-
-# Name : (executable_name , extension , flags, stdin command. )
-# Encoders must read from stdin
-
-encoders = {
-            'mp3' : ('lame','.mp3','-V 0', \
-                     '{exe} - "{output_file}" {flags}'),
-
-            'ogg' : ('oggenc','.ogg','-q 6', \
-                     '{exe} - -o "{output_file}" {flags}'),
-                        
-            'aac' : ('faac','.m4a','-q 170', \
-                     '{exe} - -w -o "{output_file}" {flags}'),   
-
-            'fdkaac' : ('avconv','.m4a','+qscale -global_quality 5 -afterburner 1', \
-                     '{exe} -i - -c:a libfdk_aac -flags {flags} "{output_file}"'),  
-
-            }
-
-windows_binaries = ('http://www.rarewares.org/files/aac/faac-1.28-mod.zip',
-                    'http://www.rarewares.org/files/lossless/flac-1.2.1b.zip',
-                    'http://www.rarewares.org/files/mp3/lame3.99.5.zip',
-                    'http://www.rarewares.org/files/ogg/oggenc2.87-1.3.3-generic.zip',
-                    )
-
-class Codec:
-    def __init__(self,codec_type='decoder',name='flac'):
-
-        self.__set_codec__(codec_type,name)
-        self.__find_exe__()
-        self.__check_executable__()
-        self.__get_version__()
-
-    def __set_codec__(self,codec_type,name):
-        """ This function initializes all the variables for the class 
-        """
-        logging.debug("Starting set codec")
-        
-        self.codec_type = codec_type
-        
-        if codec_type == 'decoder' and name in decoders:
-            self.name = decoders[name][0]   # e.g. flac
-            self.ext = decoders[name][1]    # e.g. .flac
-            self.flags = decoders[name][2]
-            self.command = decoders[name][3]
-            
-            if sys.platform == 'win32':
-                self.name += '.exe'
-            
-        elif codec_type == 'encoder' and name in encoders:
-            self.name = encoders[name][0]
-            self.ext = encoders[name][1]
-            self.flags = encoders[name][2]
-            self.command = encoders[name][3]
-
-            if sys.platform == 'win32':
-                self.name += '.exe'
-
-        else:
-            raise NameError('InvalidCodec')
+# windows_binaries = ('http://www.rarewares.org/files/aac/faac-1.28-mod.zip',
+#                     'http://www.rarewares.org/files/lossless/flac-1.2.1b.zip',
+#                     'http://www.rarewares.org/files/mp3/lame3.99.5.zip',
+#                     'http://www.rarewares.org/files/ogg/oggenc2.87-1.3.3-generic.zip',
+#                     )
 
 
-        
-    def __find_exe__(self):
-        logging.debug("Finding exe")
-        
-        if os.path.isfile(self.name):
-            self.path = self.name
-            logging.debug('Codec found in current folder')   
-        else:
-            self.path = self.__check_default_path__()
-            logging.debug('Codec found at: ' + self.path)
-                
-        
-        
-    def __check_default_path__(self):
-        """ Searches the default path for a specific named encoder """
-        logging.debug('Looking through default path for codec')
-        
-        def_paths = []
-        
-        # Check script directory first
-        def_paths.append(os.getcwd())
-        
-        if sys.platform == 'win32':
-            #def_paths = os.environ["PATH"].split(';')
-            logging.debug('Found to be running on Windows')
-            def_paths.extend(os.environ["PATH"].split(';'))
-        else:
-            #def_paths = os.environ["PATH"].split(':')
-            logging.debug('Found to be not running on Windows')
-            def_paths.extend(os.environ["PATH"].split(':'))
-            
-
-        
-        
-        logging.debug('Checking paths: ' + str(def_paths) )
-        
-        # Check if encoder in default path exists
-        for path in def_paths:
-            current = os.path.join(path,self.name)
-    
-            if os.path.isfile(current):
-                # Return first instance if encoder found
-                return current
-    
-        # Encoder not found if reached here
-        raise NameError('CodecNotFoundInDefaultPaths ' + str(def_paths))
-
-    def __check_executable__(self):
-        """ Checks if executable is executable """
-        
-        if os.access(self.path,os.X_OK) is False:
-            raise NameError('CodecNotExecutable' )
-            logging.debug("Not executable at: " + self.path)   
-    
-    def __get_version__(self):
-        """ Gets version information about the codec """
-        
-        # run command --version
-        self.version = ''
     
 class LosslessToLossyConverter:
-    def __init__(self,source_dir,dest_dir,source_codec,dest_codec, \
-                 num_threads,disable_id3=False):
+    def __init__(self,source_dir,dest_dir,Decoder,Encoder, \
+                 thread_count,disable_id3=False):
+        
+        assert(Decoder.found_exe)
+        assert(Encoder.found_exe)
         
         # Remove trailing slashes
         self.source_dir = source_dir.rstrip('/')
         self.dest_dir = dest_dir.rstrip('/')
         
-        if num_threads > 0:
-            self.num_threads = num_threads
-        else:
-            # Auto based on cpu count
-            self.num_threads = multiprocessing.cpu_count()
+        self._set_thread_count(thread_count)
         
-        self.Source_Codec = Codec('decoder',source_codec)
-        self.Dest_Codec = Codec('encoder',dest_codec)
+        self.Decoder = Decoder
+        self.Encoder = Encoder
         
         self.to_convert = []    # Music to convert
 
@@ -195,6 +76,16 @@ class LosslessToLossyConverter:
         self.error_id3 = []     # List of error id3 tags
         self.disable_id3 = disable_id3
 
+
+    def _set_thread_count(self,thread_count):
+        
+        if thread_count == 0:
+            # Auto based on cpu count
+            self.thread_count = multiprocessing.cpu_count()
+        else:
+            self.thread_count = thread_count
+            
+            
     def get_convert_list(self):
         """Populates list with files needing conversion."""
         
@@ -204,7 +95,7 @@ class LosslessToLossyConverter:
                 
                 for filename in filenames:
                     
-                    if os.path.splitext(filename)[1] in self.Source_Codec.ext \
+                    if os.path.splitext(filename)[1] in self.Decoder.ext \
                     and os.path.splitext(filename)[1] != '':
                         #logging.debug('filename extension: ' + os.path.splitext(filename)[1])
                         #logging.debug('comparing extension: ' + self.source_ext)
@@ -225,7 +116,7 @@ class LosslessToLossyConverter:
         dest = os.path.join(self.dest_dir, lossless_file_path[1+len(self.source_dir):])
         
         # Add extension
-        dest = os.path.splitext(dest)[0] + self.Dest_Codec.ext
+        dest = os.path.splitext(dest)[0] + self.Encoder.ext
         logging.debug('translate changed dest to: '+ dest)
         
         return dest
@@ -236,7 +127,7 @@ class LosslessToLossyConverter:
         dest = self.translate_src_to_dest(source_file_path)
         
         # Remove ext and add .mp3 extension
-        dest = os.path.splitext(dest)[0] + self.Dest_Codec.ext
+        dest = os.path.splitext(dest)[0] + self.Encoder.ext
         
         #logging.debug('does_lossy_file_exist dest: '+ dest)
         return  os.path.exists(dest)
@@ -285,19 +176,27 @@ class LosslessToLossyConverter:
             # Therefore we need to make extension: .tmp.m4a 
             #lossy_file_tmp = lossy_file + '.tmp'
             lossy_file_tmp = os.path.splitext(lossy_file)[0] + \
-                            '.tmp' + self.Dest_Codec.ext
-             
-            source_cmd = self.Source_Codec.command.format( \
-                            exe = self.Source_Codec.path, \
-                            input_file = lossless_file, \
-                            flags = self.Source_Codec.flags)
+                            '.tmp' + self.Encoder.ext
             
+            exe = self.Decoder.found_exe
+            input_file = lossless_file
+            flags = self.Decoder.flags
+            
+            source_cmd = self.Decoder.cmd_seq.format( \
+                            exe = exe, \
+                            input_file = input_file, \
+                            flags = flags)
+                        
             logging.debug('INPUT command: ' + source_cmd)
             
-            dest_cmd = self.Dest_Codec.command.format(  \
-                            exe= self.Dest_Codec.path,
-                            output_file = lossy_file_tmp,
-                            flags = self.Dest_Codec.flags)
+            exe = self.Encoder.found_exe
+            output_file = lossy_file_tmp
+            flags = self.Encoder.flags
+            
+            dest_cmd = self.Encoder.cmd_seq.format(  \
+                            exe= exe,
+                            output_file = output_file,
+                            flags = flags)
             
             logging.debug('OUTPUT command: ' + dest_cmd)
                         
@@ -369,7 +268,10 @@ class LosslessToLossyConverter:
         print(output)
 
     def start(self):
-        ''' Start the full conversion process '''
+        """
+            Start the full conversion process
+        """
+        
         logging.debug('Starting Conversion')
         # Build directory structure
         self.create_dest_folders()
@@ -391,7 +293,7 @@ class LosslessToLossyConverter:
             t.start()
          
             # Don't allow more than max_cpu threads to run 
-            while self.get_num_of_running_threads() >= self.num_threads: 
+            while self.get_num_of_running_threads() >= self.thread_count: 
                 # Check every second if more threads are needed
                 time.sleep(1)   
                 
@@ -407,16 +309,25 @@ class LosslessToLossyConverter:
 
 
 def main():
+
+    try:
+        CodecMgr = audio_codecs.CodecManager()
+    except audio_codecs.NoSystemDecodersFound:
+        print("Please install a valid decoder before running")
+    except audio_codecs.NoSystemEncodersFound:
+        print("Please install a valid encoder before running")
     
+    avail_decoders = CodecMgr.get_available_decoders()
+    avail_encoders = CodecMgr.get_available_encoders()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('source_dir', help='Input (lossless) directory')
     parser.add_argument('dest_dir', help='Output (lossy) directory')
     parser.add_argument('-i','--input_codec', default='flac', 
-                        choices=decoders.keys(), 
+                        choices=avail_decoders, 
                         help='Input (lossless) codec (default: flac)')
     parser.add_argument('-o','--output_codec', default='mp3', 
-                        choices=encoders.keys(), 
+                        choices=avail_encoders, 
                         help='Output (lossy) codec (default: mp3)')
     parser.add_argument('-t','--threads', type=int, default=0, 
                         help='Force specific number of threads (default: auto)')
@@ -425,14 +336,32 @@ def main():
     parser.add_argument('--debug', help='Enable debugging', action='store_true')
     
     args = parser.parse_args()
+
+    # Setup debugging
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+        logging.debug('Arguments: ' + str(args))
+
     
     source_dir = args.source_dir
     dest_dir = args.dest_dir
+    thread_count = args.threads
 
-    input_codec = 'flac'  # Default is flac
-    output_codec = args.output_codec
+    # Setup codecs
+    try:
+        Decoder = CodecMgr.select_decoder(args.input_codec)
+    except audio_codecs.SelectedCodecNotValid:
+        # This should never trigger as parser will force a  valid codec
+        print("Selected decoder not available")
+        sys.exit(1)
     
-    num_threads = args.threads
+    try:
+        Encoder = CodecMgr.select_encoder(args.output_codec)
+    except audio_codecs.SelectedCodecNotValid:
+        # This should never trigger as parser will force a  valid codec
+        print("Selected encoder not available")
+        sys.exit(1)
+
 
     if args.noid3 == True:
         disable_id3 = args.noid3
@@ -443,20 +372,18 @@ def main():
         except ImportError:
             sys.exit("""You require the Mutagen Python module
                     install it from http://code.google.com/p/mutagen/""")
-        
-
-    if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
-
-    logging.debug('Arguments: ' + str(args))
-
-
-    logging.debug('Passing to Converter: '+source_dir + dest_dir + \
-                                         input_codec +output_codec)
     
-    Converter = LosslessToLossyConverter(source_dir,dest_dir, \
-                                         input_codec,output_codec,
-                                         num_threads,disable_id3)
+
+ 
+    logging.debug('Passing to Converter: '+source_dir + dest_dir + \
+                                          str(Decoder) + str(Encoder))
+    
+    Converter = LosslessToLossyConverter(source_dir,
+                                         dest_dir, 
+                                         Decoder,
+                                         Encoder,
+                                         thread_count,
+                                         disable_id3)
 
     Converter.start()
     Converter.print_results()
