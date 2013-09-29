@@ -24,7 +24,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
-__version__ = "1.0"
+__version__ = "1.1"
 
 
 import os
@@ -32,7 +32,6 @@ import time
 import shutil
 import shlex
 import sys
-import logging
 import subprocess
 import threading
 import multiprocessing      # for cpu count
@@ -42,16 +41,8 @@ try:
 except ImportError:
     pass
 import audio_codecs 
-
-
-
-# windows_binaries = ('http://www.rarewares.org/files/aac/faac-1.28-mod.zip',
-#                     'http://www.rarewares.org/files/lossless/flac-1.2.1b.zip',
-#                     'http://www.rarewares.org/files/mp3/lame3.99.5.zip',
-#                     'http://www.rarewares.org/files/ogg/oggenc2.87-1.3.3-generic.zip',
-#                     )
-
-
+import logging
+    
     
 class LosslessToLossyConverter:
     def __init__(self,source_dir,dest_dir,Decoder,Encoder, \
@@ -144,7 +135,7 @@ class LosslessToLossyConverter:
             except:
                 pass   
 
-    def get_num_of_running_threads(self):
+    def get_running_thread_count(self):
         """Returns number of non-main Python threads"""
         
         main_thread = threading.currentThread()
@@ -293,7 +284,7 @@ class LosslessToLossyConverter:
             t.start()
          
             # Don't allow more than max_cpu threads to run 
-            while self.get_num_of_running_threads() >= self.thread_count: 
+            while self.get_running_thread_count() >= self.thread_count: 
                 # Check every second if more threads are needed
                 time.sleep(1)   
                 
@@ -308,7 +299,13 @@ class LosslessToLossyConverter:
             t.join()
 
 
+
 def main():
+    print("flacthis {version} Copyright (c) 2012-2013 Andrew Klaus (andrewklaus@gmail.com)\n"\
+          .format(version=__version__))
+    
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("main")
 
     try:
         CodecMgr = audio_codecs.CodecManager()
@@ -317,52 +314,74 @@ def main():
     except audio_codecs.NoSystemEncodersFound:
         print("Please install a valid encoder before running")
     
-    avail_decoders = CodecMgr.get_available_decoders()
-    avail_encoders = CodecMgr.get_available_encoders()
+    #avail_decoders = CodecMgr.get_avail_decoders()
+    #avail_encoders = CodecMgr.get_avail_encoders()
+    all_decoders = CodecMgr.list_all_decoders()
+    all_encoders = CodecMgr.list_all_encoders()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('source_dir', help='Input (lossless) directory')
-    parser.add_argument('dest_dir', help='Output (lossy) directory')
-    parser.add_argument('-i','--input_codec', default='flac', 
-                        choices=avail_decoders, 
+    parser.add_argument('source_dir',
+                        help='Input (lossless) directory')
+    parser.add_argument('dest_dir',
+                        help='Output (lossy) directory')
+    parser.add_argument('-i',
+                        '--input_codec',
+                        default='flac', 
+                        choices=all_decoders, 
                         help='Input (lossless) codec (default: flac)')
-    parser.add_argument('-o','--output_codec', default='mp3', 
-                        choices=avail_encoders, 
+    parser.add_argument('-o',
+                        '--output_codec',
+                        default='mp3', 
+                        choices=all_encoders, 
                         help='Output (lossy) codec (default: mp3)')
-    parser.add_argument('-t','--threads', type=int, default=0, 
+    parser.add_argument('-t',
+                        '--threads',
+                        type=int,
+                        default=0,
                         help='Force specific number of threads (default: auto)')
-    parser.add_argument('--noid3', action='store_true', default=False, \
-                        help = 'Disable ID3 file tagging (does not require Mutagen)')    
-    parser.add_argument('--debug', help='Enable debugging', action='store_true')
+    parser.add_argument('--noid3',
+                        action='store_true',
+                        default=False, \
+                        help = 'Disable ID3 file tagging (remove requirement for Mutagen)')    
+    parser.add_argument('--debug',
+                        help='Enable debugging',
+                        action='store_true')
     
     args = parser.parse_args()
 
+
     # Setup debugging
     if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug('Arguments: ' + str(args))
-
-    
+        logger.setLevel(logging.DEBUG)
+        logging.getLogger("audio_codecs").setLevel(logging.DEBUG)
+        logger.debug('Arguments: ' + str(args))
+    else:
+        logger.setLevel(logging.INFO)
+        logging.getLogger("audio_codecs").setLevel(logging.INFO)
+   
     source_dir = args.source_dir
     dest_dir = args.dest_dir
     thread_count = args.threads
 
     # Setup codecs
     try:
-        Decoder = CodecMgr.select_decoder(args.input_codec)
+        Decoder = CodecMgr.get_decoder(args.input_codec)
+        print("Using Decoder version: {}".format(Decoder.version))
     except audio_codecs.SelectedCodecNotValid:
         # This should never trigger as parser will force a  valid codec
         print("Selected decoder not available")
         sys.exit(1)
     
     try:
-        Encoder = CodecMgr.select_encoder(args.output_codec)
+        Encoder = CodecMgr.get_encoder(args.output_codec)
+        print("Using Encoder version: {}".format(Encoder.version))
     except audio_codecs.SelectedCodecNotValid:
         # This should never trigger as parser will force a  valid codec
         print("Selected encoder not available")
         sys.exit(1)
 
 
+    
     if args.noid3 == True:
         disable_id3 = args.noid3
     else:
@@ -375,9 +394,9 @@ def main():
     
 
  
-    logging.debug('Passing to Converter: '+source_dir + dest_dir + \
+    logger.debug('Passing to Converter: '+source_dir + dest_dir + \
                                           str(Decoder) + str(Encoder))
-    
+
     Converter = LosslessToLossyConverter(source_dir,
                                          dest_dir, 
                                          Decoder,

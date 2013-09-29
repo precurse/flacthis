@@ -1,15 +1,15 @@
 flacthis
 ========
 
-A multithreaded and multi-platform BSD licensed Python-based command line utility that converts
+A multithreaded and multi-platform, BSD-licensed, Python-based command line utility that converts
 lossless FLAC or WAV audio files to MP3s, AAC, or Ogg and preserves the directory structure.
 
 I created this when I didn't want to use the Mono libraries needed to use
- FlacSquisher and wanted something easy to run in a cronjob.
+ other alternatives and wanted something easy to run in a cronjob.
 
 NOTE: No files or directories will ever be deleted. Only new directories and
  files are created. The purpose of this utility is to be able to run it over
- and over again and only needing to encode new content.
+ and over again and only needing to encode new content. 
 
 Prerequisites
 --------------
@@ -22,10 +22,11 @@ Prerequisites
 	+ http://sourceforge.net/projects/faac/
 	+ Windows binary: http://www.rarewares.org/files/aac/faac-1.28-mod.zip
 
-* Libav encoder for Fraunhofer AAC support: (avconv)
+* ffmpeg or libav encoder for Fraunhofer AAC support: (ffmpeg or avconv)
 	+ Fraunhofer codec: http://sourceforge.net/projects/opencore-amr/files/fdk-aac/
 	+ http://libav.org/download.html
-		-  Libav must be compiled with "--enable-libfdk-aac" 
+	+ http://ffmpeg.org/download.html
+		-  Both must be compiled with "--enable-libfdk-aac" 
 
 * Ogg encoder for Ogg support: (oggenc)
 	+ http://www.vorbis.com/
@@ -44,25 +45,26 @@ Prerequisites
 Usage
 ------
 
-	usage: flacthis.py [-h] [-i {wav,flac}] [-o {fdkaac,ogg,mp3,aac}] [-t THREADS]
-		           [--noid3] [--debug]
-		           source_dir dest_dir
-
+	usage: flacthis.py [-h] [-i {flac,wav,winwav}]
+	                   [-o {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}] [-t THREADS]
+	                   [--noid3] [--debug]
+	                   source_dir dest_dir
+	
 	positional arguments:
 	  source_dir            Input (lossless) directory
 	  dest_dir              Output (lossy) directory
-
+	
 	optional arguments:
 	  -h, --help            show this help message and exit
-	  -i {wav,flac}, --input_codec {wav,flac}
-		                Input (lossless) codec (default: flac)
-	  -o {fdkaac,ogg,mp3,aac}, --output_codec {fdkaac,ogg,mp3,aac}
-		                Output (lossy) codec (default: mp3)
+	  -i {flac,wav,winwav}, --input_codec {flac,wav,winwav}
+	                        Input (lossless) codec (default: flac)
+	  -o {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}, --output_codec {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}
+	                        Output (lossy) codec (default: mp3)
 	  -t THREADS, --threads THREADS
-		                Force specific number of threads (default: auto)
-	  --noid3               Disable ID3 file tagging (does not require Mutagen)
+	                        Force specific number of threads (default: auto)
+	  --noid3               Disable ID3 file tagging (remove requirement for
+	                        Mutagen)
 	  --debug               Enable debugging
-
 
 
 
@@ -102,4 +104,4 @@ Benchmarks
 		sys	0m6.090s
 
 
-Run, and enjoy. If any issues are encountered, feel free to contact me at andrewklaus@gmail.com.
+Run, and enjoy. If any issues are encountered, please contact me at andrewklaus@gmail.com.
