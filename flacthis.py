@@ -1,16 +1,16 @@
 # !/usr/bin/python2
-'''
+"""
 Copyright (c) 2013, Andrew Klaus <andrewklaus@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met: 
+modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer. 
+   list of conditions and the following disclaimer.
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution. 
+   and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -23,7 +23,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+
+"""
+
 __version__ = "1.1"
 
 import os
@@ -85,8 +87,8 @@ class LosslessToLossyConverter:
 
                     if os.path.splitext(filename)[1] in self.Decoder.ext \
                             and os.path.splitext(filename)[1] != '':
-                        #logging.debug('filename extension: ' + os.path.splitext(filename)[1])
-                        #logging.debug('comparing extension: ' + self.source_ext)
+                        # logging.debug('filename extension: ' + os.path.splitext(filename)[1])
+                        # logging.debug('comparing extension: ' + self.source_ext)
                         if not self.does_lossy_file_exist(os.path.join(dirpath, filename)):
                             logging.debug('***Adding to_convert: ' + os.path.join(dirpath, filename))
                             # Lossy song does not exist
@@ -111,13 +113,13 @@ class LosslessToLossyConverter:
 
     def does_lossy_file_exist(self, source_file_path):
         """ Checks if .lossless -> .lossy file already exists """
-        #logging.debug('does_lossy_file_exist received: '+ source_file_path)
+        # logging.debug('does_lossy_file_exist received: '+ source_file_path)
         dest = self.translate_src_to_dest(source_file_path)
 
         # Remove ext and add .mp3 extension
         dest = os.path.splitext(dest)[0] + self.Encoder.ext
 
-        #logging.debug('does_lossy_file_exist dest: '+ dest)
+        # logging.debug('does_lossy_file_exist dest: '+ dest)
         return os.path.exists(dest)
 
     def create_dest_folders(self):
@@ -161,7 +163,7 @@ class LosslessToLossyConverter:
         try:
             # avconv complains when .m4a.tmp files are used as output.
             # Therefore we need to make extension: .tmp.m4a 
-            #lossy_file_tmp = lossy_file + '.tmp'
+            # lossy_file_tmp = lossy_file + '.tmp'
             lossy_file_tmp = os.path.splitext(lossy_file)[0] + '.tmp' + self.Encoder.ext
 
             exe = self.Decoder.found_exe
@@ -225,7 +227,6 @@ class LosslessToLossyConverter:
         except:
             self.error_id3.append(lossy_file)
 
-
     def print_results(self):
         """ Print a final summary of successful and/or failed conversions"""
         output = ''
@@ -278,9 +279,6 @@ class LosslessToLossyConverter:
             while self.get_running_thread_count() >= self.thread_count:
                 # Check every second if more threads are needed
                 time.sleep(1)
-
-
-
                 # Wait for threads to complete
         main_thread = threading.current_thread()
 
@@ -385,7 +383,7 @@ def main(*import_args):
         print("Selected encoder not available")
         sys.exit(1)
 
-    if args.noid3 == True:
+    if args.noid3:
         disable_id3 = args.noid3
     else:
         disable_id3 = args.noid3
