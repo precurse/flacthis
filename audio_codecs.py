@@ -111,10 +111,10 @@ class Codec(object):
         return found_exe
             
 
-    def _is_exe_in_path(self,path=None):
+    def _is_exe_in_path(self, path=None):
         """
             Checks if executable name is in the provided path.
-            If no path provided, currect working directory is checked
+            If no path provided, current working directory is checked
              
             Returns True if it is, False if not.
         """
@@ -123,7 +123,7 @@ class Codec(object):
         if path is None:
             file_path = self.exec_file
         else:
-            file_path = os.path.join(path,self.exec_file)
+            file_path = os.path.join(path, self.exec_file)
         
         if os.path.isfile(file_path):
             found = True
@@ -262,16 +262,17 @@ class FfmpegLibFdkEncoder(Codec):
                  exec_file="ffmpeg",
                  ext=".m4a",
                  flags="-vbr 3",
-                 cmd_seq = """{exe} -v 0 -i - -c:a libfdk_aac {flags} "{output_file}" """):
-        
+                 cmd_seq = """{exe} -v 0 -i - -c:a aac {flags} "{output_file}" """):
+
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
 
     def _check_exe_codec_support(self):
-        # the -v 0 suppresses verbose output 
-        o = subprocess.check_output([self.found_exe,"-v","0","-encoders"])
-        
-        if "libfdk_aac" not in o.split(" "):
-            raise NotCompiledWithCodecSupport
+        # the -v 0 suppresses verbose output
+        try:
+            o = subprocess.check_output([self.found_exe,"-v","0","-encoders"])
+        except subprocess.CalledProcessError:
+            #if "libfdk_aac" not in o.split(" "):
+                raise NotCompiledWithCodecSupport
 
     def _find_exe_version(self):
         version = subprocess.check_output([self.found_exe,"-v","0","-version"])

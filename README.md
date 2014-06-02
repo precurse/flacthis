@@ -15,7 +15,7 @@ NOTE: No files or directories will ever be deleted. Only new directories and
  files are created. The purpose of this utility is to be able to run it on a regular
  basis and only needing to encode new content. 
 
-Usage
+Command Line Usage
 ------
 
 	usage: flacthis.py [-h] [-i {flac,wav,winwav}]
@@ -39,6 +39,26 @@ Usage
 	                        Mutagen)
 	  --debug               Enable debugging
 
+    
+Module Import Usage
+------
+When importing `flacthis` as a module into your existing codebase the module requires, at minimum, the 
+source and destination directories.  You can either pass these directly to the constructor (see the code below).
+
+```python
+import flacthis
+
+ft = flacthis.main(['source_dir', 'dest_dir'])
+```
+
+If you wish to use optional arguments like `--input-codec`, you must maintain the positional directory arguments as
+shown below:
+
+```python
+import flacthis
+
+ft = flacthis.main(['i', 'flac', 'o', 'mp3', '--debug', 'source_dir', 'dest_dir'])
+```
 
 Supported Codecs
 --------------
