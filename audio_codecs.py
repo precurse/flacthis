@@ -250,16 +250,15 @@ class FfmpegLibFdkEncoder(Codec):
                  exec_file="ffmpeg",
                  ext=".m4a",
                  flags="-vbr 3",
-                 cmd_seq='{exe} -v 0 -i - -c:a aac {flags} "{output_file}" '):
+                 cmd_seq='{exe} -v 0 -i - -c:a libfdk_aac {flags} "{output_file}" '):
         #libfdk_aac
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
 
     def _check_exe_codec_support(self):
         # the -v 0 suppresses verbose output
         try:
-            o = subprocess.check_output([self.found_exe, "-v", "0", "-encoders"])
+            subprocess.check_output([self.found_exe, "-v", "0", "-encoders"])
         except subprocess.CalledProcessError:
-            #if "libfdk_aac" not in o.split(" "):
             raise NotCompiledWithCodecSupport
 
     def _find_exe_version(self):

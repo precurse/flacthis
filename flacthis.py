@@ -27,6 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 __version__ = "1.1"
+__author__ = 'Andrew Klaus'
+__author_email__ = 'andrewklaus@gmail.com'
+__copyright__ = '2014'
 
 import os
 import time
@@ -334,14 +337,14 @@ def setup_logging(debug=False):
     return logger
 
 
-def main(*import_args):
-    print("flacthis {version} Copyright (c) 2012-2013 Andrew Klaus (andrewklaus@gmail.com)\n"
-          .format(version=__version__))
+def main(import_args):
+    print("flacthis {version} Copyright (c) {copyright} {author} ({email})\n"
+          .format(version=__version__, copyright=__copyright__, author=__author__, email=__author_email__))
 
     try:
         CodecMgr = audio_codecs.CodecManager()
     except Exception as e:
-        print("an unknown error has occurred: {}".format(str(e)))
+        sys.exit('An unknown error has occurred: {}'.format(str(e)))
 
     decoders = CodecMgr.list_all_decoders()
     encoders = CodecMgr.list_all_encoders()
@@ -349,7 +352,8 @@ def main(*import_args):
     if __name__ == "__main__":  # test if user using from CLI
         args = setup_parsing(decoders, encoders).parse_args()
     else:  # user imported module, use given args
-        args = setup_parsing(decoders, encoders).parse_args(*import_args)
+        args = setup_parsing(decoders, encoders).parse_args(import_args)
+
     logger = setup_logging(args.debug)
     logger.debug('Arguments: ' + str(args))
 
@@ -360,28 +364,24 @@ def main(*import_args):
     try:
         CodecMgr.discover_codecs()
     except audio_codecs.NoSystemDecodersFound:
-        print("Please install a valid decoder before running")
-        sys.exit(1)
+        sys.exit("Please install a valid decoder before running")
     except audio_codecs.NoSystemEncodersFound:
-        print("Please install a valid encoder before running")
-        sys.exit(1)
+        sys.exit("Please install a valid encoder before running")
 
     # Setup codecs
     try:
         Decoder = CodecMgr.get_decoder(args.input_codec)
         print("Using Decoder version: {}".format(Decoder.version))
-    except audio_codecs.SelectedCodecNotValid:
+    except audio_codecs.SelectedCodecNotValid, e:
         # This should never trigger as parser will force a  valid codec
-        print("Selected decoder not available")
-        sys.exit(1)
+        raise audio_codecs.SelectedCodecNotValid('{} decoder not available'.format(args.input_codec))
 
     try:
         Encoder = CodecMgr.get_encoder(args.output_codec)
         print("Using Encoder version: {}".format(Encoder.version))
-    except audio_codecs.SelectedCodecNotValid:
+    except audio_codecs.SelectedCodecNotValid, e:
         # This should never trigger as parser will force a  valid codec
-        print("Selected encoder not available")
-        sys.exit(1)
+        raise audio_codecs.SelectedCodecNotValid('{} encoder not available'.format(args.output_codec))
 
     if args.noid3:
         disable_id3 = args.noid3
