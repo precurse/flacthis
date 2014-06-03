@@ -15,6 +15,23 @@ NOTE: No files or directories will ever be deleted. Only new directories and
  files are created. The purpose of this utility is to be able to run it on a regular
  basis and only needing to encode new content. 
 
+Installation
+------
+Install from [Github](http://www.github.com) using git:
+    
+    git clone https://github.com/precurse/flacthis.git
+    
+Install module requirements using [pip](http://www.pip-installer.org/en/latest/), a
+package manager for Python.
+
+    pip install -r requirements.txt
+    
+Need pip? Try installing it by running the following from the command
+line:
+
+    $ curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python
+
+
 Command Line Usage
 ------
 
