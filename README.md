@@ -17,7 +17,7 @@ NOTE: No files or directories will ever be deleted. Only new directories and
 
 Installation
 ------
-Install from [Github](http://www.github.com) using git:
+Install `flacthis` from [Github](http://www.github.com) using git:
     
     git clone https://github.com/precurse/flacthis.git
     
@@ -60,7 +60,7 @@ Command Line Usage
 Module Import Usage
 ------
 When importing `flacthis` as a module into your existing codebase the module requires, at minimum, the 
-source and destination directories.  You can either pass these directly to the constructor (see the code below).
+source and destination directories.  You can pass these directly to the constructor (see the code below).
 
 ```python
 import flacthis

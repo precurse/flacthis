@@ -358,6 +358,10 @@ def main(import_args):
     logger.debug('Arguments: ' + str(args))
 
     source_dir = args.source_dir
+    if not os.path.isdir(source_dir):  # check if dir exists
+        raise IOError('Source directory not found')
+    if not os.access(source_dir, os.R_OK):  # check if dir is readable
+        raise OSError('Source directory not readable')
     dest_dir = args.dest_dir
     thread_count = args.threads
 
@@ -383,10 +387,8 @@ def main(import_args):
         # This should never trigger as parser will force a  valid codec
         raise audio_codecs.SelectedCodecNotValid('{} encoder not available'.format(args.output_codec))
 
-    if args.noid3:
-        disable_id3 = args.noid3
-    else:
-        disable_id3 = args.noid3
+    disable_id3 = args.noid3
+    if not disable_id3:
         try:
             import mutagen
         except ImportError:
