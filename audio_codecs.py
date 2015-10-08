@@ -1,15 +1,15 @@
-'''
+"""
 Copyright (c) 2013, Andrew Klaus <andrewklaus@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met: 
+modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer. 
+   list of conditions and the following disclaimer.
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution. 
+   and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -22,7 +22,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 import os
 import logging
 import sys
@@ -45,6 +45,7 @@ class Codec(object):
         
         Must run .find_exe() to initiate the locate 
     """
+
     def __init__(self, name, exec_file, ext, cmd_seq, flags):
         self.name = name
         self.exec_file = exec_file
@@ -52,23 +53,22 @@ class Codec(object):
         self.cmd_seq = cmd_seq
         self.flags = flags
         self.version = None
-        
+
         self.found_exe = None
-        
+
         # Append .exe if running windows
         if self._is_windows_os() \
-          and self.exec_file[-4:] != ".exe":
+                and self.exec_file[-4:] != ".exe":
             self.exec_file += ".exe"
 
     def __str__(self, *args, **kwargs):
         if self.found_exe:
-            r_str = "{name} : {found_exe}".format(name=self.name,found_exe=self.found_exe)
+            r_str = "{name} : {found_exe}".format(name=self.name, found_exe=self.found_exe)
         else:
-            r_str = "{name} : Not Found".format(name=self.name) 
-        
+            r_str = "{name} : Not Found".format(name=self.name)
+
         return r_str
 
-    
     def _check_paths_for_exe(self):
         """
             Checks for the executable in the OS default path
@@ -77,13 +77,11 @@ class Codec(object):
             
         """
         logger.debug("Checking through default path for {}".format(self.exec_file))
-        
+
         found_exe = None
-        
-        def_paths = []
-        
-        def_paths.append(os.getcwd())   # Check current directory FIRST
-        
+
+        def_paths = [os.getcwd()]  # Check current directory FIRST
+
         if self._is_windows_os():
             logger.debug("Running win32 environment")
             def_paths.extend(os.environ["PATH"].split(';'))
@@ -93,66 +91,60 @@ class Codec(object):
 
         if len(def_paths) == 0:
             raise NoDefaultPaths
-           
+
         logger.debug("Checking paths: {}".format(str(def_paths)))
-        
+
         # Check through default paths
         for path in def_paths:
             if self._is_exe_in_path(path):
                 # Found 
-                found_exe = os.path.join(path,self.exec_file)
+                found_exe = os.path.join(path, self.exec_file)
                 break
-        
+
         if found_exe is not None:
             logger.debug("Found executable: {}".format(found_exe))
         else:
             logger.debug("No {} executable found".format(self.exec_file))
-            
-        return found_exe
-            
 
-    def _is_exe_in_path(self,path=None):
+        return found_exe
+
+    def _is_exe_in_path(self, path=None):
         """
             Checks if executable name is in the provided path.
-            If no path provided, currect working directory is checked
+            If no path provided, current working directory is checked
              
             Returns True if it is, False if not.
         """
         found = False
-        
+
         if path is None:
             file_path = self.exec_file
         else:
-            file_path = os.path.join(path,self.exec_file)
-        
+            file_path = os.path.join(path, self.exec_file)
+
         if os.path.isfile(file_path):
             found = True
-        
+
         return found
 
     def _is_exe_executable(self):
-        
-        assert(self.found_exe)
-        
-        executable = os.access(self.found_exe,os.X_OK)
 
-        return executable 
+        assert self.found_exe
 
-    def _is_windows_os(self):
-        w = False
-        
-        if sys.platform in ("win32",
-                            "cygwin"):
-            w = True
-            
-        return w
-        
+        executable = os.access(self.found_exe, os.X_OK)
+
+        return executable
+
+    @staticmethod
+    def _is_windows_os():
+        return sys.platform in ("win32", "cygwin")
+
     def _find_exe_version(self):
         """
             Must be implemented at the subclass level
         """
         pass
-    
+
     def _check_exe_codec_support(self):
         """
             Must be implemented at the subclass level.
@@ -163,7 +155,7 @@ class Codec(object):
             We need a method that will check the exe for this support
         """
         pass
-        
+
     def find_exe(self):
         """
             Attempts to locate executable for codec starting with the
@@ -174,12 +166,12 @@ class Codec(object):
             
         """
         logger.debug("Finding executable {}".format(self.exec_file))
-        
+
         self.found_exe = self._check_paths_for_exe()
-        
+
         if not self.found_exe:
             raise CodecNotFound
-        
+
         if not self._is_exe_executable():
             raise CodecNotExecutable
 
@@ -187,8 +179,9 @@ class Codec(object):
         self._check_exe_codec_support()
         self._find_exe_version()
 
-    def override_codec_flags(self,flags):
+    def override_codec_flags(self, flags):
         self.flags = flags
+
 
 #### DECODERS ####
 
@@ -198,28 +191,26 @@ class FLACDecoder(Codec):
                  exec_file="flac",
                  ext=".flac",
                  flags="",
-                 cmd_seq = """{exe} -s -c -d "{input_file}" {flags}"""):
-
+                 cmd_seq="""{exe} -s -c -d "{input_file}" {flags}"""):
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
-        
+
     def _find_exe_version(self):
-        version = subprocess.check_output([self.found_exe,"-v"])
-        
+        version = subprocess.check_output([self.found_exe, "-v"])
+
         if len(version) > 0:
             self.version = version.strip()
 
-        
+
 class WAVDecoder(Codec):
     def __init__(self,
                  name="wav",
                  exec_file="cat",
                  ext=".wav",
                  flags="",
-                 cmd_seq = """{exe} "{input_file}" {flags}"""):
-
+                 cmd_seq="""{exe} "{input_file}" {flags}"""):
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
-        
-        
+
+
 # Wave file support for windows (UNTESTED)
 class WINWAVDecoder(Codec):
     def __init__(self,
@@ -227,8 +218,7 @@ class WINWAVDecoder(Codec):
                  exec_file="type.exe",
                  ext=".wav",
                  flags="",
-                 cmd_seq = """{exe} "{input_file}" {flags}"""):
-
+                 cmd_seq="""{exe} "{input_file}" {flags}"""):
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
 
 
@@ -240,9 +230,9 @@ class AACEncoder(Codec):
                  exec_file="faac",
                  ext=".m4a",
                  flags="-q 170",
-                 cmd_seq = """{exe} - -w -o "{output_file}" {flags}"""):
-        
+                 cmd_seq="""{exe} - -w -o "{output_file}" {flags}"""):
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
+
 
 class AVConvLibFdkAACEncoder(Codec):
     def __init__(self,
@@ -250,10 +240,8 @@ class AVConvLibFdkAACEncoder(Codec):
                  exec_file="avconv",
                  ext=".m4a",
                  flags="+qscale -global_quality 5 -afterburner 1",
-                 cmd_seq = """{exe} -i - -c:a libfdk_aac -flags {flags} "{output_file}" """):
-        
+                 cmd_seq='{exe} -i - -c:a libfdk_aac -flags {flags} "{output_file}" '):
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
-        
 
 
 class FfmpegLibFdkEncoder(Codec):
@@ -262,25 +250,26 @@ class FfmpegLibFdkEncoder(Codec):
                  exec_file="ffmpeg",
                  ext=".m4a",
                  flags="-vbr 3",
-                 cmd_seq = """{exe} -v 0 -i - -c:a libfdk_aac {flags} "{output_file}" """):
-        
+                 cmd_seq='{exe} -v 0 -i - -c:a libfdk_aac {flags} "{output_file}" '):
+        #libfdk_aac
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
 
     def _check_exe_codec_support(self):
-        # the -v 0 suppresses verbose output 
-        o = subprocess.check_output([self.found_exe,"-v","0","-encoders"])
-        
-        if "libfdk_aac" not in o.split(" "):
+        # the -v 0 suppresses verbose output
+        try:
+            subprocess.check_output([self.found_exe, "-v", "0", "-encoders"])
+        except subprocess.CalledProcessError:
             raise NotCompiledWithCodecSupport
 
     def _find_exe_version(self):
-        version = subprocess.check_output([self.found_exe,"-v","0","-version"])
-        
+        version = subprocess.check_output([self.found_exe, "-v", "0", "-version"])
+
         # Lame has a lot of output.. we only want the first line
         version = version.split("\n")[0]
-        
+
         if len(version) > 0:
-            self.version = version.strip()  
+            self.version = version.strip()
+
 
 class MP3Encoder(Codec):
     def __init__(self,
@@ -288,34 +277,34 @@ class MP3Encoder(Codec):
                  exec_file="lame",
                  ext=".mp3",
                  flags="-V 0",
-                 cmd_seq = """{exe} - "{output_file}" --silent {flags}"""):
-        
+                 cmd_seq="""{exe} - "{output_file}" --silent {flags}"""):
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
 
     def _find_exe_version(self):
-        version = subprocess.check_output([self.found_exe,"--version"])
-        
+        version = subprocess.check_output([self.found_exe, "--version"])
+
         # Lame has a lot of output.. we only want the first line
         version = version.split("\n")[0]
-        
+
         if len(version) > 0:
-            self.version = version.strip()        
-        
+            self.version = version.strip()
+
+
 class OGGEncoder(Codec):
     def __init__(self,
                  name="ogg",
                  exec_file="oggenc",
                  ext=".ogg",
                  flags="-q 6",
-                 cmd_seq = """{exe} - -o "{output_file}" {flags}"""):
-        
+                 cmd_seq="""{exe} - -o "{output_file}" {flags}"""):
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
 
     def _find_exe_version(self):
-        version = subprocess.check_output([self.found_exe,"--version"])
-        
+        version = subprocess.check_output([self.found_exe, "--version"])
+
         if len(version) > 0:
-            self.version = version.strip()   
+            self.version = version.strip()
+
 
 class CodecManager(object):
     """
@@ -327,17 +316,16 @@ class CodecManager(object):
     __decoders__ = (FLACDecoder,
                     WAVDecoder,
                     WINWAVDecoder)
-    
+
     __encoders__ = (MP3Encoder,
                     OGGEncoder,
                     AACEncoder,
                     AVConvLibFdkAACEncoder,
                     FfmpegLibFdkEncoder,)
-    
+
     def __init__(self):
         self._avail_decoders = []
         self._avail_encoders = []
-        
 
     def discover_codecs(self):
         """
@@ -348,7 +336,7 @@ class CodecManager(object):
             t_obj = codec()
             try:
                 t_obj.find_exe()
-                
+
             except CodecNotFound:
                 # Don't add to list
                 logger.debug("Decoder {} not found".format(t_obj.name))
@@ -358,12 +346,12 @@ class CodecManager(object):
                 logger.debug("Decoder {} not compiled with codec support".format(t_obj.name))
             else:
                 self._avail_decoders.append(t_obj)
-        
+
         for codec in self.__encoders__:
             t_obj = codec()
             try:
                 t_obj.find_exe()
-                
+
             except CodecNotFound:
                 # Don't add to list
                 logger.debug("Encoder {} not found".format(t_obj.name))
@@ -373,15 +361,13 @@ class CodecManager(object):
                 logger.debug("Encoder {} not compiled with codec support".format(t_obj.name))
             else:
                 self._avail_encoders.append(t_obj)
-        
-        
+
         if len(self._avail_decoders) < 1:
             raise NoSystemDecodersFound
         elif len(self._avail_decoders) < 1:
             raise NoSystemEncodersFound
 
-    
-    def get_decoder(self,codec_name):
+    def get_decoder(self, codec_name):
         """
             Accepts a name of a codec, and returns codec object
         """
@@ -390,15 +376,15 @@ class CodecManager(object):
         for d in self._avail_decoders:
             if codec_name in d.name:
                 decoder = d
-                break 
-    
+                break
+
         if decoder is None:
             raise SelectedCodecNotValid
-    
+
         logger.debug("Returning {}".format(str(decoder)))
         return decoder
-    
-    def get_encoder(self,codec_name):
+
+    def get_encoder(self, codec_name):
         """
             Accepts a name of a codec, and returns codec object
         """
@@ -407,11 +393,11 @@ class CodecManager(object):
         for e in self._avail_encoders:
             if codec_name in e.name:
                 encoder = e
-                break 
-    
+                break
+
         if encoder is None:
             raise SelectedCodecNotValid
-    
+
         logger.debug("Returning {}".format(str(encoder)))
         return encoder
 
@@ -421,12 +407,12 @@ class CodecManager(object):
             that are supported
         """
         d = []
-        
+
         # Go through full list and get names
         for c in self.__decoders__:
             d.append(c().name)
-  
-        return d 
+
+        return d
 
     def list_all_encoders(self):
         """
@@ -434,12 +420,12 @@ class CodecManager(object):
             that are supported
         """
         d = []
-        
+
         for c in self.__encoders__:
             d.append(c().name)
-            
+
         return d
-            
+
     def get_avail_decoders(self):
         """
             Returns a list of decoders available 
@@ -448,9 +434,9 @@ class CodecManager(object):
         r_list = []
         for d in self._avail_decoders:
             r_list.append(d.name)
-            
+
         return r_list
-    
+
     def get_avail_encoders(self):
         """
             Returns a list of encoders available 
@@ -460,8 +446,9 @@ class CodecManager(object):
 
         for e in self._avail_encoders:
             r_list.append(e.name)
-            
+
         return r_list
+
 
 class SelectedCodecNotValid(Exception):
     """
@@ -470,23 +457,30 @@ class SelectedCodecNotValid(Exception):
     """
     pass
 
+
 class NoSystemDecodersFound(Exception):
     pass
+
 
 class NoSystemEncodersFound(Exception):
     pass
 
+
 class NoDefaultPaths(Exception):
     pass
 
+
 class CodecNotFound(Exception):
-    pass    
+    pass
+
 
 class CodecNotExecutable(Exception):
     pass
 
+
 class NotCompiledWithCodecSupport(Exception):
     pass
 
-if __name__ == "__main__": 
+
+if __name__ == "__main__":
     print("This module must be imported")
