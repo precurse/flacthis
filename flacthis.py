@@ -418,5 +418,5 @@ def main(import_args):
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(0))
 
