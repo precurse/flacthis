@@ -1,6 +1,6 @@
 # !/usr/bin/python2
 """
-Copyright (c) 2013, Andrew Klaus <andrewklaus@gmail.com>
+Copyright (c) 2016, Andrew Klaus <andrewklaus@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 
-__version__ = "1.1"
+__version__ = "1.2"
 __author__ = 'Andrew Klaus'
 __author_email__ = 'andrewklaus@gmail.com'
-__copyright__ = '2014'
+__copyright__ = '2016'
 
 import os
 import time

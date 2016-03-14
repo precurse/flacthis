@@ -101,7 +101,7 @@ Most of these can be downloaded easily from rarewares.org on Windows, or install
 Requirements
 -------------
 
-* Python2 (tested on 2.7.5)
+* Python2 (tested on 2.7.11)
 
 * A supported decoder from above list
 
