@@ -109,7 +109,7 @@ Requirements
 
 * Mutagen Python Library (Optional, but highly recommended)
     + Used for ID3 tagging, but requirement can be disabled with --noid3 flag
-    + http://code.google.com/p/mutagen/
+    + https://bitbucket.org/lazka/mutagen
 
 
 Benchmarks
