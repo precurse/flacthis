@@ -6,26 +6,26 @@ lossless FLAC or WAV audio files to MP3s, AAC, or Ogg and preserves the director
 
 I created this when I didn't want to use the Mono libraries needed to use
  other alternatives and wanted something easy to run in a cronjob.
- 
+
 This has been designed to be as modular as possible. Any type of codec that supports
  writing to/from stdin/out can be added with minimal effort. I've supported the majority
  of mainstream codecs, but if there are others you want added, please email me!
- 
+
 NOTE: No files or directories will ever be deleted. Only new directories and
  files are created. The purpose of this utility is to be able to run it on a regular
- basis and only needing to encode new content. 
+ basis and only needing to encode new content.
 
 Installation
 ------
 Install `flacthis` from [Github](http://www.github.com) using git:
-    
+
     git clone https://github.com/precurse/flacthis.git
-    
+
 Install module requirements using [pip](http://www.pip-installer.org/en/latest/), a
 package manager for Python.
 
     pip install -r requirements.txt
-    
+
 Need pip? Try installing it by running the following from the command
 line:
 
@@ -35,31 +35,31 @@ line:
 Command Line Usage
 ------
 
-	usage: flacthis.py [-h] [-i {flac,wav,winwav}]
-	                   [-o {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}] [-t THREADS]
-	                   [--noid3] [--debug]
-	                   source_dir dest_dir
-	
-	positional arguments:
-	  source_dir            Input (lossless) directory
-	  dest_dir              Output (lossy) directory
-	
-	optional arguments:
-	  -h, --help            show this help message and exit
-	  -i {flac,wav,winwav}, --input_codec {flac,wav,winwav}
-	                        Input (lossless) codec (default: flac)
-	  -o {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}, --output_codec {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}
-	                        Output (lossy) codec (default: mp3)
-	  -t THREADS, --threads THREADS
-	                        Force specific number of threads (default: auto)
-	  --noid3               Disable ID3 file tagging (remove requirement for
-	                        Mutagen)
-	  --debug               Enable debugging
+    usage: flacthis.py [-h] [-i {flac,wav,winwav}]
+                       [-o {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}] [-t THREADS]
+                       [--noid3] [--debug]
+                       source_dir dest_dir
 
-    
+    positional arguments:
+      source_dir            Input (lossless) directory
+      dest_dir              Output (lossy) directory
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -i {flac,wav,winwav}, --input_codec {flac,wav,winwav}
+                            Input (lossless) codec (default: flac)
+      -o {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}, --output_codec {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}
+                            Output (lossy) codec (default: mp3)
+      -t THREADS, --threads THREADS
+                            Force specific number of threads (default: auto)
+      --noid3               Disable ID3 file tagging (remove requirement for
+                            Mutagen)
+      --debug               Enable debugging
+
+
 Module Import Usage
 ------
-When importing `flacthis` as a module into your existing codebase the module requires, at minimum, the 
+When importing `flacthis` as a module into your existing codebase the module requires, at minimum, the
 source and destination directories.  You can pass these directly to the constructor (see the code below).
 
 ```python
@@ -90,8 +90,8 @@ Supported Codecs
 * AAC encoder: (faac)
 
 * ffmpeg or libav encoder for Fraunhofer AAC support: (ffmpeg or avconv)
-	+ Fraunhofer codec: http://sourceforge.net/projects/opencore-amr/files/fdk-aac/
-	+ Both must be compiled with "--enable-libfdk-aac".
+    + Fraunhofer codec: http://sourceforge.net/projects/opencore-amr/files/fdk-aac/
+    + Both must be compiled with "--enable-libfdk-aac".
 
 * Ogg encoder: (oggenc)
 
@@ -101,7 +101,7 @@ Most of these can be downloaded easily from rarewares.org on Windows, or install
 Requirements
 -------------
 
-* Python2 (tested on 2.7.11)
+* Python (tested on 2.7.13 and Python 3.6.0)
 
 * A supported decoder from above list
 
@@ -109,43 +109,43 @@ Requirements
 
 * Mutagen Python Library (Optional, but highly recommended)
     + Used for ID3 tagging, but requirement can be disabled with --noid3 flag
-	+ http://code.google.com/p/mutagen/
+    + http://code.google.com/p/mutagen/
 
 
 Benchmarks
 -----------
 
-	System: Intel i5-750 w/ Intel 520 120GB SSD 
-	Command: Using Linux time command and flacthis -t 1,2,3,4, or 5 (lame encoder with -V 0 flags):
+    System: Intel i5-750 w/ Intel 520 120GB SSD
+    Command: Using Linux time command and flacthis -t 1,2,3,4, or 5 (lame encoder with -V 0 flags):
 
-	3 albums (39 songs)
-	Input: 1.7GB
-	Output: 471.5MB
+    3 albums (39 songs)
+    Input: 1.7GB
+    Output: 471.5MB
 
-	1 Thread: 
-		real	7m33.512s
-		user	7m20.371s
-		sys	0m8.363s
+    1 Thread:
+        real    7m33.512s
+        user    7m20.371s
+        sys    0m8.363s
 
-	2 Threads:
-		real	4m5.559s
-		user	7m37.347s
-		sys	0m7.729s
+    2 Threads:
+        real    4m5.559s
+        user    7m37.347s
+        sys    0m7.729s
 
-	3 Threads:
-		real	2m59.474s
-		user	8m2.432s
-		sys	0m7.150s
+    3 Threads:
+        real    2m59.474s
+        user    8m2.432s
+        sys    0m7.150s
 
-	4 Threads:
-		real	2m9.415s
-		user	8m3.955s
-		sys	0m6.166s
+    4 Threads:
+        real    2m9.415s
+        user    8m3.955s
+        sys    0m6.166s
 
-	5 Threads:
-		real	2m5.893s
-		user	8m3.455s
-		sys	0m6.090s
+    5 Threads:
+        real    2m5.893s
+        user    8m3.455s
+        sys    0m6.090s
 
 
 Run, and enjoy. If any issues are encountered, please contact me at andrewklaus@gmail.com.
