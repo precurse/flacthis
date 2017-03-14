@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Copyright (c) 2017, Andrew Klaus <andrewklaus@gmail.com>
 All rights reserved.
@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 
-__version__ = '1.2'
+__version__ = '1.3'
 __author__ = 'Andrew Klaus'
 __author_email__ = 'andrewklaus@gmail.com'
 __copyright__ = '2017'

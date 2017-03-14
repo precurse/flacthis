@@ -1,5 +1,5 @@
 """
-Copyright (c) 2016, Andrew Klaus <andrewklaus@gmail.com>
+Copyright (c) 2017, Andrew Klaus <andrewklaus@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -97,7 +97,7 @@ class Codec(object):
         # Check through default paths
         for path in def_paths:
             if self._is_exe_in_path(path):
-                # Found 
+                # Found
                 found_exe = os.path.join(path, self.exec_file)
                 break
 
@@ -198,7 +198,7 @@ class FLACDecoder(Codec):
         version = subprocess.check_output([self.found_exe, "-v"])
 
         if len(version) > 0:
-            self.version = version.strip()
+            self.version = version.decode('utf8').strip()
 
 
 class WAVDecoder(Codec):
@@ -265,7 +265,7 @@ class FfmpegLibFdkEncoder(Codec):
         version = subprocess.check_output([self.found_exe, "-v", "0", "-version"])
 
         # Lame has a lot of output.. we only want the first line
-        version = version.split("\n")[0]
+        version = version.decode('utf8').split("\n")[0]
 
         if len(version) > 0:
             self.version = version.strip()
@@ -284,7 +284,7 @@ class MP3Encoder(Codec):
         version = subprocess.check_output([self.found_exe, "--version"])
 
         # Lame has a lot of output.. we only want the first line
-        version = version.split("\n")[0]
+        version = version.decode('utf8').split("\n")[0]
 
         if len(version) > 0:
             self.version = version.strip()
@@ -303,7 +303,7 @@ class OGGEncoder(Codec):
         version = subprocess.check_output([self.found_exe, "--version"])
 
         if len(version) > 0:
-            self.version = version.strip()
+            self.version = version.decode('utf8').strip()
 
 
 class CodecManager(object):
