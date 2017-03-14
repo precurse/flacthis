@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 """
 Copyright (c) 2017, Andrew Klaus <andrewklaus@gmail.com>
 All rights reserved.
@@ -97,7 +97,7 @@ class LosslessToLossyConverter:
                             # Lossy song does not exist
                             self.to_convert.append(os.path.join(dirpath, filename))
 
-        except Exception, ex:
+        except Exception as ex:
             logging.exception('Something happened in get_convert_list')
             raise SystemExit
 
@@ -204,7 +204,7 @@ class LosslessToLossyConverter:
             # Move .tmp after conversion
             shutil.move(lossy_file_tmp, lossy_file)
 
-        except Exception, ex:
+        except Exception as ex:
             logging.exception('Could not encode')
             self.error_conv.append(lossless_file)
 
@@ -343,8 +343,8 @@ def main(import_args):
 
     try:
         CodecMgr = audio_codecs.CodecManager()
-    except Exception as e:
-        sys.exit('An unknown error has occurred: {}'.format(str(e)))
+    except Exception as ex:
+        sys.exit('An unknown error has occurred: {}'.format(str(ex)))
 
     decoders = CodecMgr.list_all_decoders()
     encoders = CodecMgr.list_all_encoders()
@@ -376,14 +376,14 @@ def main(import_args):
     try:
         Decoder = CodecMgr.get_decoder(args.input_codec)
         print("Using Decoder version: {}".format(Decoder.version))
-    except audio_codecs.SelectedCodecNotValid, e:
+    except audio_codecs.SelectedCodecNotValid as e:
         # This should never trigger as parser will force a  valid codec
         raise audio_codecs.SelectedCodecNotValid('{} decoder not available'.format(args.input_codec))
 
     try:
         Encoder = CodecMgr.get_encoder(args.output_codec)
         print("Using Encoder version: {}".format(Encoder.version))
-    except audio_codecs.SelectedCodecNotValid, e:
+    except audio_codecs.SelectedCodecNotValid as e:
         # This should never trigger as parser will force a  valid codec
         raise audio_codecs.SelectedCodecNotValid('{} encoder not available'.format(args.output_codec))
 
