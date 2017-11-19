@@ -116,13 +116,16 @@ class LosslessToLossyConverter:
         self.Decoder = config.decoder
         self.Encoder = config.encoder
 
-        self.to_convert = []  # Music to convert
+        self.to_convert = []    # Music to convert
+        self.to_copy = []       # Artwork to copy
 
-        self.success = 0  # Successful conversions
-        self.error_conv = []  # List of error conversions
-        self.error_id3 = []  # List of error id3 tags
+        self.success = 0        # Successful conversions
+        self.error_conv = []    # List of error conversions
+        self.error_id3 = []     # List of error id3 tags
+
         self.disable_id3 = config.disable_id3
         self.no_artwork = config.no_artwork
+        self.artwork_ext = ['jpg','JPG','jpeg','JPEG','bmp','BMP']
         self.debug = config.debug
 
     def _set_thread_count(self, thread_count):
@@ -139,28 +142,63 @@ class LosslessToLossyConverter:
         self.logger.debug('Get convert list starting')
         try:
             for dirpath, dirnames, filenames in os.walk(self.source_dir):
+                # Flag to create directory after all files checked
+                found_file = False
 
                 for filename in filenames:
 
+                    # Find artwork
+                    if not self.no_artwork and \
+                      os.path.splitext(filename)[1][1:] in self.artwork_ext:
+                        self.logger.debug("Found artwork file: {}".format(\
+                                                      os.path.join(dirpath, filename)))
+                        found_file = True
+                        self.to_copy.append(os.path.join(dirpath, filename))
+
+                    # Find files to convert
                     if os.path.splitext(filename)[1] in self.Decoder.ext \
                             and os.path.splitext(filename)[1] != '':
-                        # logging.debug('filename extension: ' + os.path.splitext(filename)[1])
-                        # logging.debug('comparing extension: ' + self.source_ext)
+                        # self.logger.debug('filename extension: ' + os.path.splitext(filename)[1])
+                        # self.logger.debug('comparing extension: ' + self.source_ext)
                         if not self.does_lossy_file_exist(os.path.join(dirpath, filename)):
                             self.logger.debug('***Adding to_convert: ' + os.path.join(dirpath, filename))
                             # Lossy song does not exist
                             self.to_convert.append(os.path.join(dirpath, filename))
 
+                            found_file = True
+
+                if found_file:
+                    # Create destination directory
+                    d = os.path.join(self.dest_dir, dirpath[len(self.source_dir):])
+                    self.logger.debug("Creating directory {}".format(d))
+                    try:
+                        os.makedirs(d)
+                    except OSError as e:
+                        if e.errno == os.errno.EEXIST:
+                            # Ignore file already exists exception
+                            pass
+
         except Exception as ex:
             self.logger.exception('Something happened in get_convert_list')
             raise SystemExit
+
+    def copy_artwork(self):
+        """ Copy artwork to destination directory """
+        assert(not self.no_artwork)
+        for c in self.to_copy:
+            d = os.path.normpath(self.dest_dir + c[len(self.source_dir):])
+            self.logger.debug("Copying {} to {}".format(c, d))
+            shutil.copy2(c, d)
+
 
     def translate_src_to_dest(self, lossless_file_path):
         """Provides translation between the source file and destination file"""
 
         # Remove "src_path" from path
         self.logger.debug('translate got: ' + lossless_file_path)
-        dest = os.path.join(self.dest_dir, lossless_file_path[1 + len(self.source_dir):])
+        self.logger.debug("Dest_dir: {}".format(self.dest_dir))
+        self.logger.debug("{}".format(lossless_file_path[len(self.source_dir):]))
+        dest = os.path.normpath(self.dest_dir + lossless_file_path[len(self.source_dir):])
 
         # Add extension
         dest = os.path.splitext(dest)[0] + self.Encoder.ext
@@ -178,18 +216,6 @@ class LosslessToLossyConverter:
 
         # self.logger.debug('does_lossy_file_exist dest: '+ dest)
         return os.path.exists(dest)
-
-    def create_dest_folders(self):
-        """ This creates an identical folder structure as the source directory
-            It attempts to create a folder (even if it exists), but catches any
-            FolderAlreadyExists exceptions that may arise.
-        """
-        self.logger.debug('Creating folder structure')
-        for dirpath, dirnames, filenames in os.walk(self.source_dir):
-            try:
-                os.makedirs(os.path.join(self.dest_dir, dirpath[1 + len(self.source_dir):]))
-            except:
-                pass
 
     def get_running_thread_count(self):
         """Returns number of non-main Python threads"""
@@ -321,12 +347,14 @@ class LosslessToLossyConverter:
         """
 
         self.logger.debug('Starting Conversion')
-        # Build directory structure
-        self.create_dest_folders()
 
         self.get_convert_list()
 
         self.logger.debug('Number of items in convert list: ' + str(len(self.to_convert)))
+
+        if not self.no_artwork:
+            self.logger.debug('Copying artwork')
+            self.copy_artwork()
 
         # Start Threaded Converting
         while len(self.to_convert) > 0:
