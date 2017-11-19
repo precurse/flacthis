@@ -54,7 +54,7 @@ class ConverterConfig:
         self._source_dir = None
         self.encoder = None
         self.decoder = None
-        self.artwork = True
+        self.no_artwork = False
         self.disable_id3 = False
         self.thread_count = 0
         self.debug = False
@@ -93,35 +93,17 @@ class ConverterConfig:
                     Dest Directory: {}
                     Decoder: {}
                     Encoder: {}
+                    Don't copy artwork: {}
                 """.format(self.source_dir,
                            self.dest_dir,
                            str(self.decoder),
-                           str(self.encoder))
+                           str(self.encoder),
+                           str(self.no_artwork))
 
 class LosslessToLossyConverter:
-    def __init__(self, source_dir, dest_dir, Decoder, Encoder, thread_count, disable_id3=False):
-
-        assert (Decoder.found_exe)
-        assert (Encoder.found_exe)
-
-        # Remove trailing slashes
-        self.source_dir = source_dir.rstrip('/')
-        self.dest_dir = dest_dir.rstrip('/')
-
-        self._set_thread_count(thread_count)
-
-        self.Decoder = Decoder
-        self.Encoder = Encoder
-
-        self.to_convert = []  # Music to convert
-
-        self.success = 0  # Successful conversions
-        self.error_conv = []  # List of error conversions
-        self.error_id3 = []  # List of error id3 tags
-        self.disable_id3 = disable_id3
-
     def __init__(self, config):
         self.config = config
+        self.logger = logging.getLogger("audio_converter")
 
         assert (config.decoder.found_exe)
         assert (config.encoder.found_exe)
@@ -140,6 +122,8 @@ class LosslessToLossyConverter:
         self.error_conv = []  # List of error conversions
         self.error_id3 = []  # List of error id3 tags
         self.disable_id3 = config.disable_id3
+        self.no_artwork = config.no_artwork
+        self.debug = config.debug
 
     def _set_thread_count(self, thread_count):
 
@@ -152,7 +136,7 @@ class LosslessToLossyConverter:
     def get_convert_list(self):
         """Populates list with files needing conversion."""
 
-        logging.debug('Get convert list starting')
+        self.logger.debug('Get convert list starting')
         try:
             for dirpath, dirnames, filenames in os.walk(self.source_dir):
 
@@ -163,36 +147,36 @@ class LosslessToLossyConverter:
                         # logging.debug('filename extension: ' + os.path.splitext(filename)[1])
                         # logging.debug('comparing extension: ' + self.source_ext)
                         if not self.does_lossy_file_exist(os.path.join(dirpath, filename)):
-                            logging.debug('***Adding to_convert: ' + os.path.join(dirpath, filename))
+                            self.logger.debug('***Adding to_convert: ' + os.path.join(dirpath, filename))
                             # Lossy song does not exist
                             self.to_convert.append(os.path.join(dirpath, filename))
 
         except Exception as ex:
-            logging.exception('Something happened in get_convert_list')
+            self.logger.exception('Something happened in get_convert_list')
             raise SystemExit
 
     def translate_src_to_dest(self, lossless_file_path):
         """Provides translation between the source file and destination file"""
 
         # Remove "src_path" from path
-        logging.debug('translate got: ' + lossless_file_path)
+        self.logger.debug('translate got: ' + lossless_file_path)
         dest = os.path.join(self.dest_dir, lossless_file_path[1 + len(self.source_dir):])
 
         # Add extension
         dest = os.path.splitext(dest)[0] + self.Encoder.ext
-        logging.debug('translate changed dest to: ' + dest)
+        self.logger.debug('translate changed dest to: ' + dest)
 
         return dest
 
     def does_lossy_file_exist(self, source_file_path):
         """ Checks if .lossless -> .lossy file already exists """
-        # logging.debug('does_lossy_file_exist received: '+ source_file_path)
+        # self.logger.debug('does_lossy_file_exist received: '+ source_file_path)
         dest = self.translate_src_to_dest(source_file_path)
 
         # Remove ext and add .mp3 extension
         dest = os.path.splitext(dest)[0] + self.Encoder.ext
 
-        # logging.debug('does_lossy_file_exist dest: '+ dest)
+        # self.logger.debug('does_lossy_file_exist dest: '+ dest)
         return os.path.exists(dest)
 
     def create_dest_folders(self):
@@ -200,7 +184,7 @@ class LosslessToLossyConverter:
             It attempts to create a folder (even if it exists), but catches any
             FolderAlreadyExists exceptions that may arise.
         """
-        logging.debug('Creating folder structure')
+        self.logger.debug('Creating folder structure')
         for dirpath, dirnames, filenames in os.walk(self.source_dir):
             try:
                 os.makedirs(os.path.join(self.dest_dir, dirpath[1 + len(self.source_dir):]))
@@ -223,7 +207,7 @@ class LosslessToLossyConverter:
         return count
 
     def encode_and_tagging(self, lossless_file, lossy_file):
-        logging.debug('Starting encode_and_tagging. Received: ' + ' ' + lossless_file + ' ' + lossy_file)
+        self.logger.debug('Starting encode_and_tagging. Received: ' + ' ' + lossless_file + ' ' + lossy_file)
 
         conv_result = self.convert_to_lossy(lossless_file, lossy_file)
 
@@ -248,7 +232,7 @@ class LosslessToLossyConverter:
                 input_file=input_file,
                 flags=flags)
 
-            logging.debug('INPUT command: ' + source_cmd)
+            self.logger.debug('INPUT command: ' + source_cmd)
 
             exe = self.Encoder.found_exe
             output_file = lossy_file_tmp
@@ -259,7 +243,7 @@ class LosslessToLossyConverter:
                 output_file=output_file,
                 flags=flags)
 
-            logging.debug('OUTPUT command: ' + dest_cmd)
+            self.logger.debug('OUTPUT command: ' + dest_cmd)
 
             src_args = shlex.split(source_cmd)
             dest_args = shlex.split(dest_cmd)
@@ -269,13 +253,13 @@ class LosslessToLossyConverter:
 
             output = p2.communicate()[0]
 
-            logging.debug('Encode output: ' + str(output))
+            self.logger.debug('Encode output: ' + str(output))
 
             # Move .tmp after conversion
             shutil.move(lossy_file_tmp, lossy_file)
 
         except Exception as ex:
-            logging.exception('Could not encode')
+            self.logger.exception('Could not encode')
             self.error_conv.append(lossless_file)
 
             return 1
@@ -298,7 +282,7 @@ class LosslessToLossyConverter:
 
             lossy_tags.save()
         except Exception as e:
-            logging.exception(e)
+            self.logger.exception(e)
             self.error_id3.append(lossy_file)
 
     def print_results(self):
@@ -336,13 +320,13 @@ class LosslessToLossyConverter:
             Start the full conversion process
         """
 
-        logging.debug('Starting Conversion')
+        self.logger.debug('Starting Conversion')
         # Build directory structure
         self.create_dest_folders()
 
         self.get_convert_list()
 
-        logging.debug('Number of items in convert list: ' + str(len(self.to_convert)))
+        self.logger.debug('Number of items in convert list: ' + str(len(self.to_convert)))
 
         # Start Threaded Converting
         while len(self.to_convert) > 0:
@@ -393,10 +377,9 @@ def setup_parsing(decoders, encoders):
                         action='store_true',
                         default=False,
                         help='Disable ID3 file tagging (remove requirement for Mutagen)')
-    parser.add_argument('--artwork',
+    parser.add_argument('--noartwork',
                         action='store_true',
-                        default=True,
-                        help='Also copy artwork from the source folder')
+                        help='Disable copy of artwork (default: false)')
     parser.add_argument('--debug',
                         help='Enable debugging',
                         action='store_true')
@@ -411,6 +394,7 @@ def setup_logging(debug=False):
     if debug:
         logger.setLevel(logging.DEBUG)
         logging.getLogger("audio_codecs").setLevel(logging.DEBUG)
+        logging.getLogger("audio_converter").setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
         logging.getLogger("audio_codecs").setLevel(logging.INFO)
@@ -443,6 +427,7 @@ def main(import_args):
     config.source_dir = args.source_dir
     config.dest_dir = args.dest_dir
     config.thread_count = args.threads
+    config.no_artwork = args.noartwork
 
     try:
         CodecMgr.discover_codecs()
