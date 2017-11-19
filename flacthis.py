@@ -48,6 +48,55 @@ except ImportError:
 import audio_codecs
 import logging
 
+class ConverterConfig:
+    def __init__(self):
+        self._dest_dir = None
+        self._source_dir = None
+        self.encoder = None
+        self.decoder = None
+        self.artwork = True
+        self.disable_id3 = False
+        self.thread_count = 0
+        self.debug = False
+
+    @property
+    def dest_dir(self):
+        return self._dest_dir
+
+    @dest_dir.setter
+    def dest_dir(self, dir):
+        # Remove trailing slashes from path
+        self._dest_dir = dir.rstrip('/')
+
+    @property
+    def source_dir(self):
+        return self._source_dir
+
+    @source_dir.setter
+    def source_dir(self, dir):
+        # Remove trailing slashes from path
+        d = dir.rstrip('/')
+        # Verify source directory exists and readable
+        if not os.path.isdir(d):
+            raise IOError('Source directory not found')
+        if not os.access(d, os.R_OK):
+            raise OSError('Source directory not readable')
+
+        self._source_dir = d
+
+
+
+    def print_config(self):
+        """ Print configuration """
+
+        return """Source Directory: {}
+                    Dest Directory: {}
+                    Decoder: {}
+                    Encoder: {}
+                """.format(self.source_dir,
+                           self.dest_dir,
+                           str(self.decoder),
+                           str(self.encoder))
 
 class LosslessToLossyConverter:
     def __init__(self, source_dir, dest_dir, Decoder, Encoder, thread_count, disable_id3=False):
@@ -70,6 +119,27 @@ class LosslessToLossyConverter:
         self.error_conv = []  # List of error conversions
         self.error_id3 = []  # List of error id3 tags
         self.disable_id3 = disable_id3
+
+    def __init__(self, config):
+        self.config = config
+
+        assert (config.decoder.found_exe)
+        assert (config.encoder.found_exe)
+
+        self.source_dir = config.source_dir
+        self.dest_dir = config.dest_dir
+
+        self._set_thread_count(config.thread_count)
+
+        self.Decoder = config.decoder
+        self.Encoder = config.encoder
+
+        self.to_convert = []  # Music to convert
+
+        self.success = 0  # Successful conversions
+        self.error_conv = []  # List of error conversions
+        self.error_id3 = []  # List of error id3 tags
+        self.disable_id3 = config.disable_id3
 
     def _set_thread_count(self, thread_count):
 
@@ -127,8 +197,8 @@ class LosslessToLossyConverter:
 
     def create_dest_folders(self):
         """ This creates an identical folder structure as the source directory
-            It attempts to create a folder (even if it exists), but catches any 
-            FolderAlreadyExists exceptions that may arise. 
+            It attempts to create a folder (even if it exists), but catches any
+            FolderAlreadyExists exceptions that may arise.
         """
         logging.debug('Creating folder structure')
         for dirpath, dirnames, filenames in os.walk(self.source_dir):
@@ -165,7 +235,7 @@ class LosslessToLossyConverter:
 
         try:
             # avconv complains when .m4a.tmp files are used as output.
-            # Therefore we need to make extension: .tmp.m4a 
+            # Therefore we need to make extension: .tmp.m4a
             # lossy_file_tmp = lossy_file + '.tmp'
             lossy_file_tmp = os.path.splitext(lossy_file)[0] + '.tmp' + self.Encoder.ext
 
@@ -227,7 +297,8 @@ class LosslessToLossyConverter:
                     lossy_tags[k] = lossless_tags[k]
 
             lossy_tags.save()
-        except:
+        except Exception as e:
+            logging.exception(e)
             self.error_id3.append(lossy_file)
 
     def print_results(self):
@@ -238,12 +309,18 @@ class LosslessToLossyConverter:
         count_failed_id3 = len(self.error_id3)
 
         if count_failed_conv > 0:
-            output += '{} songs failed to convert\n'.format(count_failed_conv)
+            output += '{} songs failed to convert:\n'.format(count_failed_conv)
+
+            for s in self.error_conv:
+                output += '{}\n'.format(s)
         else:
             output += '0 conversion errors\n'
 
         if count_failed_id3 > 0:
             output += '{} ID3 tags failed to write\n'.format(count_failed_id3)
+
+            for s in self.error_id3:
+                output += '{}\n'.format(s)
         else:
             output += '0 ID3 tag errors\n'
 
@@ -278,7 +355,7 @@ class LosslessToLossyConverter:
 
             t.start()
 
-            # Don't allow more than max_cpu threads to run 
+            # Don't allow more than max_cpu threads to run
             while self.get_running_thread_count() >= self.thread_count:
                 # Check every second if more threads are needed
                 time.sleep(1)
@@ -316,6 +393,10 @@ def setup_parsing(decoders, encoders):
                         action='store_true',
                         default=False,
                         help='Disable ID3 file tagging (remove requirement for Mutagen)')
+    parser.add_argument('--artwork',
+                        action='store_true',
+                        default=True,
+                        help='Also copy artwork from the source folder')
     parser.add_argument('--debug',
                         help='Enable debugging',
                         action='store_true')
@@ -346,6 +427,8 @@ def main(import_args):
     except Exception as ex:
         sys.exit('An unknown error has occurred: {}'.format(str(ex)))
 
+    config = ConverterConfig()
+
     decoders = CodecMgr.list_all_decoders()
     encoders = CodecMgr.list_all_encoders()
 
@@ -357,13 +440,9 @@ def main(import_args):
     logger = setup_logging(args.debug)
     logger.debug('Arguments: ' + str(args))
 
-    source_dir = args.source_dir
-    if not os.path.isdir(source_dir):  # check if dir exists
-        raise IOError('Source directory not found')
-    if not os.access(source_dir, os.R_OK):  # check if dir is readable
-        raise OSError('Source directory not readable')
-    dest_dir = args.dest_dir
-    thread_count = args.threads
+    config.source_dir = args.source_dir
+    config.dest_dir = args.dest_dir
+    config.thread_count = args.threads
 
     try:
         CodecMgr.discover_codecs()
@@ -374,45 +453,31 @@ def main(import_args):
 
     # Setup codecs
     try:
-        Decoder = CodecMgr.get_decoder(args.input_codec)
-        print("Using Decoder version: {}".format(Decoder.version))
+        config.decoder = CodecMgr.get_decoder(args.input_codec)
+        print("Using Decoder version: {}".format(config.decoder.version))
     except audio_codecs.SelectedCodecNotValid as e:
-        # This should never trigger as parser will force a  valid codec
+        # This should never trigger as parser will force a valid codec
         raise audio_codecs.SelectedCodecNotValid('{} decoder not available'.format(args.input_codec))
 
     try:
-        Encoder = CodecMgr.get_encoder(args.output_codec)
-        print("Using Encoder version: {}".format(Encoder.version))
+        config.encoder = CodecMgr.get_encoder(args.output_codec)
+        print("Using Encoder version: {}".format(config.encoder.version))
     except audio_codecs.SelectedCodecNotValid as e:
-        # This should never trigger as parser will force a  valid codec
+        # This should never trigger as parser will force a valid codec
         raise audio_codecs.SelectedCodecNotValid('{} encoder not available'.format(args.output_codec))
 
-    disable_id3 = args.noid3
-    if not disable_id3:
+    config.disable_id3 = args.noid3
+    if not config.disable_id3:
         try:
             import mutagen
         except ImportError:
             sys.exit("""You require the Mutagen Python module
                     install it from http://code.google.com/p/mutagen/""")
 
-    logger.debug("""Source Directory: {}
-                    Dest Directory: {}
-                    Decoder: {}
-                    Encoder: {}
-                """.format(source_dir,
-                           dest_dir,
-                           str(Decoder),
-                           str(Encoder)))
-
-    Converter = LosslessToLossyConverter(source_dir,
-                                         dest_dir,
-                                         Decoder,
-                                         Encoder,
-                                         thread_count,
-                                         disable_id3)
-
-    Converter.start()
-    Converter.print_results()
+    logger.debug(config.print_config())
+    converter = LosslessToLossyConverter(config)
+    converter.start()
+    converter.print_results()
 
     return 0
 
