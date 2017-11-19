@@ -35,15 +35,15 @@ logger = logging.getLogger(__name__)
 class Codec(object):
     """
         Superclass for all encoders and decoders
-        
+
         name is the name of the encoder (ex. FLAC, Wav, etc.)
-        exe_file is the executable name that runs the codec (ex flac) 
+        exe_file is the executable name that runs the codec (ex flac)
         ext is the file extension that's used for files  (ex .flac)
         cmd_seq is the stdin/stdout command line arguments for exe_file:
             in the format like : "{exe} -c -d "{input_file}" {flags}"
         flags is the desired flags to append to the cmd_seq
-        
-        Must run .find_exe() to initiate the locate 
+
+        Must run .find_exe() to initiate the locate
     """
 
     def __init__(self, name, exec_file, ext, cmd_seq, flags):
@@ -72,9 +72,9 @@ class Codec(object):
     def _check_paths_for_exe(self):
         """
             Checks for the executable in the OS default path
-            
+
             Returns string of path+exe if found.
-            
+
         """
         logger.debug("Checking through default path for {}".format(self.exec_file))
 
@@ -112,7 +112,7 @@ class Codec(object):
         """
             Checks if executable name is in the provided path.
             If no path provided, current working directory is checked
-             
+
             Returns True if it is, False if not.
         """
         found = False
@@ -148,10 +148,10 @@ class Codec(object):
     def _check_exe_codec_support(self):
         """
             Must be implemented at the subclass level.
-            
+
             Some projects don't implement certain codecs by default.
             (i.e.  ffmpeg doesn't compile libfdk-aac in by default)
-            
+
             We need a method that will check the exe for this support
         """
         pass
@@ -160,10 +160,10 @@ class Codec(object):
         """
             Attempts to locate executable for codec starting with the
             current directory, then looks in the default path
-            
+
             Raises CodecNotFound if file was not found
             Raises CodecNotExecutable if file not executable
-            
+
         """
         logger.debug("Finding executable {}".format(self.exec_file))
 
@@ -175,7 +175,7 @@ class Codec(object):
         if not self._is_exe_executable():
             raise CodecNotExecutable
 
-        # Won't do anything unless subclass creates a function for it        
+        # Won't do anything unless subclass creates a function for it
         self._check_exe_codec_support()
         self._find_exe_version()
 
@@ -309,9 +309,9 @@ class OGGEncoder(Codec):
 class CodecManager(object):
     """
         Manager for all supported codecs.
-        
+
         discover_codecs() must be run before trying to select a codec
-         
+
     """
     __decoders__ = (FLACDecoder,
                     WAVDecoder,
@@ -428,7 +428,7 @@ class CodecManager(object):
 
     def get_avail_decoders(self):
         """
-            Returns a list of decoders available 
+            Returns a list of decoders available
             to the script
         """
         r_list = []
@@ -439,7 +439,7 @@ class CodecManager(object):
 
     def get_avail_encoders(self):
         """
-            Returns a list of encoders available 
+            Returns a list of encoders available
             to the script
         """
         r_list = []
