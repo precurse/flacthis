@@ -37,7 +37,7 @@ Command Line Usage
 
     usage: flacthis.py [-h] [-i {flac,wav,winwav}]
                        [-o {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}] [-t THREADS]
-                       [--noid3] [--debug]
+                       [--noid3] [--noartwork] [--debug]
                        source_dir dest_dir
 
     positional arguments:
@@ -54,6 +54,7 @@ Command Line Usage
                             Force specific number of threads (default: auto)
       --noid3               Disable ID3 file tagging (remove requirement for
                             Mutagen)
+      --noartwork           Disable copy of artwork (default: false)
       --debug               Enable debugging
 
 
