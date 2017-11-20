@@ -152,8 +152,21 @@ class LosslessToLossyConverter:
                       os.path.splitext(filename)[1][1:] in self.artwork_ext:
                         self.logger.debug("Found artwork file: {}".format(\
                                                       os.path.join(dirpath, filename)))
-                        found_file = True
-                        self.to_copy.append(os.path.join(dirpath, filename))
+                        f_path_src = os.path.join(dirpath, filename)
+
+                        f_path_dest = os.path.normpath(self.dest_dir + \
+                                              f_path_src[len(self.source_dir):])
+
+                        # Check if file already exists on dest
+                        try:
+                            f_exists = os.path.isfile(f_path_dest)
+                        except OSError as e:
+                            self.logger.exception(e)
+
+                        if not f_exists:
+                            self.logger.debug("Artwork file {} doesn't exist at dest".format(f_path_src))
+                            found_file = True
+                            self.to_copy.append(f_path_src)
 
                     # Find files to convert
                     if os.path.splitext(filename)[1] in self.Decoder.ext \
@@ -319,7 +332,7 @@ class LosslessToLossyConverter:
         count_failed_id3 = len(self.error_id3)
 
         if count_failed_conv > 0:
-            output += '{} songs failed to convert:\n'.format(count_failed_conv)
+            output += '{} song(s) failed to convert:\n'.format(count_failed_conv)
 
             for s in self.error_conv:
                 output += '{}\n'.format(s)
@@ -327,7 +340,7 @@ class LosslessToLossyConverter:
             output += '0 conversion errors\n'
 
         if count_failed_id3 > 0:
-            output += '{} ID3 tags failed to write\n'.format(count_failed_id3)
+            output += '{} ID3 tag(s) failed to write\n'.format(count_failed_id3)
 
             for s in self.error_id3:
                 output += '{}\n'.format(s)
@@ -335,7 +348,7 @@ class LosslessToLossyConverter:
             output += '0 ID3 tag errors\n'
 
         if self.success > 0:
-            output += '{} songs successfully converted'.format(self.success)
+            output += '{} song(s) successfully converted'.format(self.success)
         else:
             output += '0 songs converted'
 
