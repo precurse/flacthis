@@ -233,6 +233,14 @@ class AACEncoder(Codec):
                  cmd_seq="""{exe} - -w -o "{output_file}" {flags}"""):
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
 
+class FdkAACEncoder(Codec):
+    def __init__(self,
+                 name="fdkaac",
+                 exec_file="fdkaac",
+                 ext=".m4a",
+                 flags="-m 5",
+                 cmd_seq='{exe} {flags} -o "{output_file}" -'):
+        Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
 
 class AVConvLibFdkAACEncoder(Codec):
     def __init__(self,
@@ -242,7 +250,6 @@ class AVConvLibFdkAACEncoder(Codec):
                  flags="+qscale -global_quality 5 -afterburner 1",
                  cmd_seq='{exe} -i - -c:a libfdk_aac -flags {flags} "{output_file}" '):
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
-
 
 class FfmpegLibFdkEncoder(Codec):
     def __init__(self,
@@ -320,6 +327,7 @@ class CodecManager(object):
     __encoders__ = (MP3Encoder,
                     OGGEncoder,
                     AACEncoder,
+                    FdkAACEncoder,
                     AVConvLibFdkAACEncoder,
                     FfmpegLibFdkEncoder,)
 
