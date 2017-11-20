@@ -169,7 +169,7 @@ class LosslessToLossyConverter:
 
                 if found_file:
                     # Create destination directory
-                    d = os.path.join(self.dest_dir, dirpath[len(self.source_dir):])
+                    d = os.path.normpath(self.dest_dir + dirpath[len(self.source_dir):])
                     self.logger.debug("Creating directory {}".format(d))
                     try:
                         os.makedirs(d)
