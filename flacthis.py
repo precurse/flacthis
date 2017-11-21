@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""
+'''
 Copyright (c) 2017, Andrew Klaus <andrewklaus@gmail.com>
 All rights reserved.
 
@@ -24,7 +24,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-"""
+'''
 
 __version__ = '1.4-head'
 __author__ = 'Andrew Klaus'
@@ -50,7 +50,7 @@ import logging
 
 class ConverterConfig(object):
     def __init__(self):
-        self.logger = logging.getLogger("config")
+        self.logger = logging.getLogger('config')
         self._dest_dir = None
         self._source_dir = None
         self.encoder = None
@@ -91,23 +91,24 @@ class ConverterConfig(object):
 
     @threads.setter
     def threads(self, t):
+        ''' Set CPU threads to use. 0 = auto-detect '''
         if t == 0:
             cpu = multiprocessing.cpu_count()
-            self.logger.debug("Setting cpu count to {}".format(cpu))
+            self.logger.debug('Setting cpu count to {}'.format(cpu))
             self._threads = cpu
         else:
-            self.logger.debug("Setting CPU count to {}".format(t))
+            self.logger.debug('Setting CPU count to {}'.format(t))
             self._threads = t
 
     def __str__(self):
-        return """Source Directory: {}
+        return '''Source Directory: {}
                     Dest Directory: {}
                     Decoder: {}
                     Encoder: {}
                     Threads: {}
                     Skip artwork: {}
                     Disable ID3 tags: {}
-                """.format(self.source_dir,
+                '''.format(self.source_dir,
                            self.dest_dir,
                            str(self.decoder),
                            str(self.encoder),
@@ -118,7 +119,7 @@ class ConverterConfig(object):
 class LosslessToLossyConverter(object):
     def __init__(self, config):
         self.config = config
-        self.logger = logging.getLogger("audio_converter")
+        self.logger = logging.getLogger('audio_converter')
 
         assert (config.decoder.found_exe)
         assert (config.encoder.found_exe)
@@ -144,7 +145,7 @@ class LosslessToLossyConverter(object):
         self.debug = config.debug
 
     def get_convert_list(self):
-        """Populates list with files needing conversion."""
+        '''Populates list with files needing conversion.'''
 
         self.logger.debug('Get convert list starting')
         try:
@@ -157,7 +158,7 @@ class LosslessToLossyConverter(object):
                     # Find artwork
                     if not self.no_artwork and \
                       os.path.splitext(filename)[1][1:] in self.artwork_ext:
-                        self.logger.debug("Found artwork file: {}".format(\
+                        self.logger.debug('Found artwork file: {}'.format(\
                                                       os.path.join(dirpath, filename)))
                         f_path_src = os.path.join(dirpath, filename)
 
@@ -171,7 +172,7 @@ class LosslessToLossyConverter(object):
                             self.logger.exception(e)
 
                         if not f_exists:
-                            self.logger.debug("Artwork file {} doesn't exist at dest".format(f_path_src))
+                            self.logger.debug('Artwork file {} doesn\'t exist at dest'.format(f_path_src))
                             found_file = True
                             self.to_copy.append(f_path_src)
 
@@ -190,7 +191,7 @@ class LosslessToLossyConverter(object):
                 if found_file:
                     # Create destination directory
                     d = os.path.normpath(self.dest_dir + dirpath[len(self.source_dir):])
-                    self.logger.debug("Creating directory {}".format(d))
+                    self.logger.debug('Creating directory {}'.format(d))
                     try:
                         os.makedirs(d)
                     except OSError as e:
@@ -203,20 +204,20 @@ class LosslessToLossyConverter(object):
             raise SystemExit
 
     def copy_artwork(self):
-        """ Copy artwork to destination directory """
+        ''' Copy artwork to destination directory '''
         assert(not self.no_artwork)
         for c in self.to_copy:
             d = os.path.normpath(self.dest_dir + c[len(self.source_dir):])
-            self.logger.debug("Copying {} to {}".format(c, d))
+            self.logger.debug('Copying {} to {}'.format(c, d))
             shutil.copy2(c, d)
 
     def translate_src_to_dest(self, lossless_file_path):
-        """Provides translation between the source file and destination file"""
+        '''Provides translation between the source file and destination file'''
 
         # Remove "src_path" from path
         self.logger.debug('translate got: ' + lossless_file_path)
-        self.logger.debug("Dest_dir: {}".format(self.dest_dir))
-        self.logger.debug("{}".format(lossless_file_path[len(self.source_dir):]))
+        self.logger.debug('Dest_dir: {}'.format(self.dest_dir))
+        self.logger.debug('{}'.format(lossless_file_path[len(self.source_dir):]))
         dest = os.path.normpath(self.dest_dir + lossless_file_path[len(self.source_dir):])
 
         # Add extension
@@ -226,7 +227,7 @@ class LosslessToLossyConverter(object):
         return dest
 
     def does_lossy_file_exist(self, source_file_path):
-        """ Checks if .lossless -> .lossy file already exists """
+        ''' Checks if .lossless -> .lossy file already exists '''
         # self.logger.debug('does_lossy_file_exist received: '+ source_file_path)
         dest = self.translate_src_to_dest(source_file_path)
 
@@ -237,7 +238,7 @@ class LosslessToLossyConverter(object):
         return os.path.exists(dest)
 
     def get_running_thread_count(self):
-        """Returns number of non-main Python threads"""
+        ''' Returns number of non-main Python threads '''
 
         main_thread = threading.currentThread()
 
@@ -316,7 +317,7 @@ class LosslessToLossyConverter(object):
             return 0
 
     def update_lossy_tags(self, lossless_file, lossy_file):
-        """ Copies ID3 tags from lossless file to lossy file. """
+        ''' Copies ID3 tags from lossless file to lossy file. '''
         try:
             lossless_tags = mutagen.File(lossless_file, easy=True)
             lossy_tags = mutagen.File(lossy_file, easy=True)
@@ -331,7 +332,7 @@ class LosslessToLossyConverter(object):
             self.error_id3.append(lossy_file)
 
     def print_results(self):
-        """ Print a final summary of successful and/or failed conversions"""
+        ''' Print a final summary of successful and/or failed conversions '''
         output = ''
 
         count_failed_conv = len(self.error_conv)
@@ -361,9 +362,9 @@ class LosslessToLossyConverter(object):
         print(output)
 
     def start(self):
-        """
+        '''
             Start the full conversion process
-        """
+        '''
 
         self.logger.debug('Starting Conversion')
 
@@ -436,7 +437,7 @@ def setup_parsing(decoders, encoders):
 
 def setup_logging(debug=False):
     logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger("main")
+    logger = logging.getLogger('main')
 
     if debug:
         level = logging.DEBUG
@@ -444,15 +445,15 @@ def setup_logging(debug=False):
         level = logging.INFO
 
     logger.setLevel(level)
-    logging.getLogger("audio_codecs").setLevel(level)
-    logging.getLogger("audio_converter").setLevel(level)
-    logging.getLogger("config").setLevel(level)
+    logging.getLogger('audio_codecs').setLevel(level)
+    logging.getLogger('audio_converter').setLevel(level)
+    logging.getLogger('config').setLevel(level)
 
     return logger
 
 
 def main(import_args):
-    print("flacthis {version} Copyright (c) {copyright} {author} ({email})\n"
+    print('flacthis {version} Copyright (c) {copyright} {author} ({email})\n'
           .format(version=__version__, copyright=__copyright__, author=__author__, email=__author_email__))
 
     try:
@@ -465,7 +466,7 @@ def main(import_args):
     decoders = CodecMgr.list_all_decoders()
     encoders = CodecMgr.list_all_encoders()
 
-    if __name__ == "__main__":  # test if user using from CLI
+    if __name__ == '__main__':  # test if user using from CLI
         args = setup_parsing(decoders, encoders).parse_args()
     else:  # user imported module, use given args
         args = setup_parsing(decoders, encoders).parse_args(import_args)
@@ -481,21 +482,21 @@ def main(import_args):
     try:
         CodecMgr.discover_codecs()
     except audio_codecs.NoSystemDecodersFound:
-        sys.exit("Please install a valid decoder before running")
+        sys.exit('Please install a valid decoder before running')
     except audio_codecs.NoSystemEncodersFound:
-        sys.exit("Please install a valid encoder before running")
+        sys.exit('Please install a valid encoder before running')
 
     # Setup codecs
     try:
         config.decoder = CodecMgr.get_decoder(args.input_codec)
-        print("Using Decoder version: {}".format(config.decoder.version))
+        print('Using Decoder version: {}'.format(config.decoder.version))
     except audio_codecs.SelectedCodecNotValid as e:
         # This should never trigger as parser will force a valid codec
         raise audio_codecs.SelectedCodecNotValid('{} decoder not available'.format(args.input_codec))
 
     try:
         config.encoder = CodecMgr.get_encoder(args.output_codec)
-        print("Using Encoder version: {}".format(config.encoder.version))
+        print('Using Encoder version: {}'.format(config.encoder.version))
     except audio_codecs.SelectedCodecNotValid as e:
         # This should never trigger as parser will force a valid codec
         raise audio_codecs.SelectedCodecNotValid('{} encoder not available'.format(args.output_codec))
@@ -505,8 +506,8 @@ def main(import_args):
         try:
             import mutagen
         except ImportError:
-            sys.exit("""You require the Mutagen Python module
-                    install it from http://code.google.com/p/mutagen/""")
+            sys.exit('''You require the Mutagen Python module
+                    install it from http://code.google.com/p/mutagen/''')
 
     logger.debug(config)
     converter = LosslessToLossyConverter(config)
@@ -516,6 +517,6 @@ def main(import_args):
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main(0))
 
