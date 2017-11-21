@@ -48,15 +48,16 @@ except ImportError:
 import audio_codecs
 import logging
 
-class ConverterConfig:
+class ConverterConfig(object):
     def __init__(self):
+        self.logger = logging.getLogger("config")
         self._dest_dir = None
         self._source_dir = None
         self.encoder = None
         self.decoder = None
+        self._threads = None
         self.no_artwork = False
         self.disable_id3 = False
-        self.thread_count = 0
         self.debug = False
 
     @property
@@ -84,23 +85,37 @@ class ConverterConfig:
 
         self._source_dir = d
 
+    @property
+    def threads(self):
+        return self._threads
 
+    @threads.setter
+    def threads(self, t):
+        if t == 0:
+            cpu = multiprocessing.cpu_count()
+            self.logger.debug("Setting cpu count to {}".format(cpu))
+            self._threads = cpu
+        else:
+            self.logger.debug("Setting CPU count to {}".format(t))
+            self._threads = t
 
-    def print_config(self):
-        """ Print configuration """
-
+    def __str__(self):
         return """Source Directory: {}
                     Dest Directory: {}
                     Decoder: {}
                     Encoder: {}
-                    Don't copy artwork: {}
+                    Threads: {}
+                    Skip artwork: {}
+                    Disable ID3 tags: {}
                 """.format(self.source_dir,
                            self.dest_dir,
                            str(self.decoder),
                            str(self.encoder),
-                           str(self.no_artwork))
+                           self.threads,
+                           self.no_artwork,
+                           self.disable_id3)
 
-class LosslessToLossyConverter:
+class LosslessToLossyConverter(object):
     def __init__(self, config):
         self.config = config
         self.logger = logging.getLogger("audio_converter")
@@ -111,10 +126,10 @@ class LosslessToLossyConverter:
         self.source_dir = config.source_dir
         self.dest_dir = config.dest_dir
 
-        self._set_thread_count(config.thread_count)
 
         self.Decoder = config.decoder
         self.Encoder = config.encoder
+        self.threads = config.threads
 
         self.to_convert = []    # Music to convert
         self.to_copy = []       # Artwork to copy
@@ -127,14 +142,6 @@ class LosslessToLossyConverter:
         self.no_artwork = config.no_artwork
         self.artwork_ext = ['jpg','JPG','jpeg','JPEG','bmp','BMP']
         self.debug = config.debug
-
-    def _set_thread_count(self, thread_count):
-
-        if thread_count == 0:
-            # Auto based on cpu count
-            self.thread_count = multiprocessing.cpu_count()
-        else:
-            self.thread_count = thread_count
 
     def get_convert_list(self):
         """Populates list with files needing conversion."""
@@ -202,7 +209,6 @@ class LosslessToLossyConverter:
             d = os.path.normpath(self.dest_dir + c[len(self.source_dir):])
             self.logger.debug("Copying {} to {}".format(c, d))
             shutil.copy2(c, d)
-
 
     def translate_src_to_dest(self, lossless_file_path):
         """Provides translation between the source file and destination file"""
@@ -381,7 +387,7 @@ class LosslessToLossyConverter:
             t.start()
 
             # Don't allow more than max_cpu threads to run
-            while self.get_running_thread_count() >= self.thread_count:
+            while self.get_running_thread_count() >= self.threads:
                 # Check every second if more threads are needed
                 time.sleep(1)
                 # Wait for threads to complete
@@ -433,12 +439,14 @@ def setup_logging(debug=False):
     logger = logging.getLogger("main")
 
     if debug:
-        logger.setLevel(logging.DEBUG)
-        logging.getLogger("audio_codecs").setLevel(logging.DEBUG)
-        logging.getLogger("audio_converter").setLevel(logging.DEBUG)
+        level = logging.DEBUG
     else:
-        logger.setLevel(logging.INFO)
-        logging.getLogger("audio_codecs").setLevel(logging.INFO)
+        level = logging.INFO
+
+    logger.setLevel(level)
+    logging.getLogger("audio_codecs").setLevel(level)
+    logging.getLogger("audio_converter").setLevel(level)
+    logging.getLogger("config").setLevel(level)
 
     return logger
 
@@ -467,7 +475,7 @@ def main(import_args):
 
     config.source_dir = args.source_dir
     config.dest_dir = args.dest_dir
-    config.thread_count = args.threads
+    config.threads = args.threads
     config.no_artwork = args.noartwork
 
     try:
@@ -500,7 +508,7 @@ def main(import_args):
             sys.exit("""You require the Mutagen Python module
                     install it from http://code.google.com/p/mutagen/""")
 
-    logger.debug(config.print_config())
+    logger.debug(config)
     converter = LosslessToLossyConverter(config)
     converter.start()
     converter.print_results()
