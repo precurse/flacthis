@@ -36,8 +36,8 @@ Command Line Usage
 ------
 
     usage: flacthis.py [-h] [-i {flac,wav,winwav}]
-                       [-o {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}] [-t THREADS]
-                       [--noid3] [--noartwork] [--debug]
+                       [-o {mp3,ogg,aac,fdkaac,avconv-fdkaac,ffmpeg-fdkaac}]
+                       [-t THREADS] [--noid3] [--noartwork] [--debug]
                        source_dir dest_dir
 
     positional arguments:
@@ -48,13 +48,13 @@ Command Line Usage
       -h, --help            show this help message and exit
       -i {flac,wav,winwav}, --input_codec {flac,wav,winwav}
                             Input (lossless) codec (default: flac)
-      -o {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}, --output_codec {mp3,ogg,aac,avconv-fdkaac,ffmpeg-fdkaac}
+      -o {mp3,ogg,aac,fdkaac,avconv-fdkaac,ffmpeg-fdkaac}, --output_codec {mp3,ogg,aac,fdkaac,avconv-fdkaac,ffmpeg-fdkaac}
                             Output (lossy) codec (default: mp3)
       -t THREADS, --threads THREADS
                             Force specific number of threads (default: auto)
       --noid3               Disable ID3 file tagging (remove requirement for
                             Mutagen)
-      --noartwork           Disable copy of artwork (default: false)
+      --noartwork           Disable copy of artwork (default: copy artwork)
       --debug               Enable debugging
 
 
@@ -89,6 +89,8 @@ Supported Codecs
 * MP3 encoder: (lame)
 
 * AAC encoder: (faac)
+
+* FDKAAC encoder: (fdkaac)
 
 * ffmpeg or libav encoder for Fraunhofer AAC support: (ffmpeg or avconv)
     + Fraunhofer codec: http://sourceforge.net/projects/opencore-amr/files/fdk-aac/
