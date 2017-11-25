@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
 
-__version__ = '1.4-head'
+__version__ = '1.5-head'
 __author__ = 'Andrew Klaus'
 __author_email__ = 'andrewklaus@gmail.com'
 __copyright__ = '2017'
