@@ -452,7 +452,7 @@ def setup_parsing(decoders, encoders):
                         help='Disable ID3 file tagging (remove requirement for Mutagen)')
     parser.add_argument('--noartwork',
                         action='store_true',
-                        help='Disable copy of artwork (default: false)')
+                        help='Disable copy of artwork (default: copy artwork)')
     parser.add_argument('--noop',
                         action='store_true',
                         help='Don\'t write files. Only show files that will be (default: write files)')

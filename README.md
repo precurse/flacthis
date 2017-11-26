@@ -54,7 +54,7 @@ Command Line Usage
                             Force specific number of threads (default: auto)
       --noid3               Disable ID3 file tagging (remove requirement for
                             Mutagen)
-      --noartwork           Disable copy of artwork (default: false)
+      --noartwork           Disable copy of artwork (default: copy artwork)
       --noop                Don't write files. Only show files that will be
                             (default: write files)
       --debug               Enable debugging
