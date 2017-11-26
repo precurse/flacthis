@@ -1,30 +1,4 @@
 #!/usr/bin/env python
-'''
-Copyright (c) 2017, Andrew Klaus <andrewklaus@gmail.com>
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-'''
 
 __version__ = '1.5-head'
 __author__ = 'Andrew Klaus'
@@ -66,8 +40,41 @@ class ConverterConfig(object):
 
     @dest_dir.setter
     def dest_dir(self, dir):
+        d = dir
+        d_ok = False    # See if all dir checks pass
+
+        # Check if destination is a directory/file and is writable
+        if os.path.exists(d):
+            if not os.path.isdir(d):
+                raise OSError('Destination directory is a file')
+            elif not os.access(d, os.W_OK | os.X_OK):
+                raise OSError('Destination directory not writable')
+            else:
+                d_ok = True
+
+
+        child = d
+        par = os.path.abspath(os.path.join(child, os.pardir))
+
+        while not d_ok:
+            if child == par:
+                raise OSError('Destination directory parent not writable')
+
+            if os.path.exists(par) and os.path.isdir(par):
+                if os.access(par, os.W_OK | os.X_OK):
+                    self.logger.debug('Found writable destination directory {}'.format(par))
+                    d_ok = True
+                else:
+                    self.logger.debug('Found non-writable parent dir {}'.format(par))
+                    raise OSError('Destination directory parent not writable')
+
+            # Move up directory for next loop
+            child = par
+            par = os.path.abspath(os.path.join(child, os.pardir))
+
         # Remove trailing slashes from path
-        self._dest_dir = dir.rstrip('/')
+        self._dest_dir = d
+
 
     @property
     def source_dir(self):
@@ -75,12 +82,12 @@ class ConverterConfig(object):
 
     @source_dir.setter
     def source_dir(self, dir):
-        # Remove trailing slashes from path
-        d = dir.rstrip('/')
+        d = dir
+
         # Verify source directory exists and readable
         if not os.path.isdir(d):
-            raise IOError('Source directory not found')
-        if not os.access(d, os.R_OK):
+            raise OSError('Source directory not a directory')
+        elif not os.access(d, os.R_OK):
             raise OSError('Source directory not readable')
 
         self._source_dir = d
