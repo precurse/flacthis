@@ -32,6 +32,7 @@ class ConverterConfig(object):
         self._threads = None
         self.no_artwork = False
         self.disable_id3 = False
+        self.noop = False
         self.debug = False
 
     @property
@@ -114,6 +115,7 @@ class ConverterConfig(object):
                     Encoder: {}
                     Threads: {}
                     Skip artwork: {}
+                    Noop: {}
                     Disable ID3 tags: {}
                 '''.format(self.source_dir,
                            self.dest_dir,
@@ -121,6 +123,7 @@ class ConverterConfig(object):
                            str(self.encoder),
                            self.threads,
                            self.no_artwork,
+                           self.noop,
                            self.disable_id3)
 
 class LosslessToLossyConverter(object):
@@ -146,6 +149,7 @@ class LosslessToLossyConverter(object):
         self.error_conv = []    # List of error conversions
         self.error_id3 = []     # List of error id3 tags
 
+        self.noop = config.noop
         self.disable_id3 = config.disable_id3
         self.no_artwork = config.no_artwork
         self.artwork_ext = ['jpg','JPG','jpeg','JPEG','bmp','BMP']
@@ -200,7 +204,11 @@ class LosslessToLossyConverter(object):
                     d = os.path.normpath(self.dest_dir + dirpath[len(self.source_dir):])
                     self.logger.debug('Creating directory {}'.format(d))
                     try:
-                        os.makedirs(d)
+                        if not self.noop:
+                            os.makedirs(d)
+                        else:
+                            self.logger.info("(noop) Would create dir: {}".format(d))
+
                     except OSError as e:
                         if e.errno == os.errno.EEXIST:
                             # Ignore file already exists exception
@@ -216,7 +224,10 @@ class LosslessToLossyConverter(object):
         for c in self.to_copy:
             d = os.path.normpath(self.dest_dir + c[len(self.source_dir):])
             self.logger.debug('Copying {} to {}'.format(c, d))
-            shutil.copy2(c, d)
+            if not self.noop:
+                shutil.copy2(c, d)
+            else:
+                self.logger.info('(noop) Would copy {} to {}'.format(c,d))
 
     def translate_src_to_dest(self, lossless_file_path):
         '''Provides translation between the source file and destination file'''
@@ -262,11 +273,18 @@ class LosslessToLossyConverter(object):
     def encode_and_tagging(self, lossless_file, lossy_file):
         self.logger.debug('Starting encode_and_tagging. Received: ' + ' ' + lossless_file + ' ' + lossy_file)
 
-        conv_result = self.convert_to_lossy(lossless_file, lossy_file)
+        if not self.noop:
+            conv_result = self.convert_to_lossy(lossless_file, lossy_file)
+        else:
+            self.logger.info('(noop) Would convert {} to {}'.format(lossless_file, lossy_file))
+            conv_result = 0
 
         # Only ID3 tag if conversion successful and if not disabled
         if conv_result == 0 and not self.disable_id3:
-            self.update_lossy_tags(lossless_file, lossy_file)
+            if not self.noop:
+                self.update_lossy_tags(lossless_file, lossy_file)
+            else:
+                self.logger.info('(noop) Would update ID3 file {}'.format(lossy_file))
 
     def convert_to_lossy(self, lossless_file, lossy_file):
 
@@ -435,6 +453,9 @@ def setup_parsing(decoders, encoders):
     parser.add_argument('--noartwork',
                         action='store_true',
                         help='Disable copy of artwork (default: false)')
+    parser.add_argument('--noop',
+                        action='store_true',
+                        help='Don\'t write files. Only show files that will be (default: write files)')
     parser.add_argument('--debug',
                         help='Enable debugging',
                         action='store_true')
@@ -507,6 +528,8 @@ def main(import_args):
     except audio_codecs.SelectedCodecNotValid as e:
         # This should never trigger as parser will force a valid codec
         raise audio_codecs.SelectedCodecNotValid('{} encoder not available'.format(args.output_codec))
+
+    config.noop = args.noop
 
     config.disable_id3 = args.noid3
     if not config.disable_id3:
