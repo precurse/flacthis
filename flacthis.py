@@ -40,7 +40,7 @@ class ConverterConfig(object):
 
     @dest_dir.setter
     def dest_dir(self, dir):
-        d = dir
+        d = os.path.normpath(dir)
         d_ok = False    # See if all dir checks pass
 
         # Check if destination is a directory/file and is writable
@@ -82,7 +82,7 @@ class ConverterConfig(object):
 
     @source_dir.setter
     def source_dir(self, dir):
-        d = dir
+        d = os.path.normpath(dir)
 
         # Verify source directory exists and readable
         if not os.path.isdir(d):
