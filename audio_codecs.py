@@ -340,6 +340,9 @@ class CodecManager(object):
             Looks through all codecs at which are available
              to the system
         """
+        del self._avail_decoders[:]
+        del self._avail_encoders[:]
+
         for codec in self.__decoders__:
             t_obj = codec()
             try:
