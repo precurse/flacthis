@@ -29,7 +29,7 @@ class ConverterConfig(object):
         self._source_dir = None
         self.encoder = None
         self.decoder = None
-        self._threads = None
+        self._threads = 1
         self.no_artwork = False
         self.disable_id3 = False
         self.noop = False
@@ -127,16 +127,14 @@ class ConverterConfig(object):
                            self.disable_id3)
 
 class LosslessToLossyConverter(object):
+    artwork_ext = ['jpg','JPG','jpeg','JPEG','bmp','BMP']
+
     def __init__(self, config):
         self.config = config
         self.logger = logging.getLogger('audio_converter')
 
-        assert (config.decoder.found_exe)
-        assert (config.encoder.found_exe)
-
         self.source_dir = config.source_dir
         self.dest_dir = config.dest_dir
-
 
         self.Decoder = config.decoder
         self.Encoder = config.encoder
@@ -152,13 +150,15 @@ class LosslessToLossyConverter(object):
         self.noop = config.noop
         self.disable_id3 = config.disable_id3
         self.no_artwork = config.no_artwork
-        self.artwork_ext = ['jpg','JPG','jpeg','JPEG','bmp','BMP']
         self.debug = config.debug
 
     def get_convert_list(self):
         '''Populates list with files needing conversion.'''
 
+        assert(self.source_dir)
+        assert(self.dest_dir)
         self.logger.debug('Get convert list starting')
+
         try:
             for dirpath, dirnames, filenames in os.walk(self.source_dir):
                 # Flag to create directory after all files checked
@@ -215,7 +215,7 @@ class LosslessToLossyConverter(object):
                             pass
 
         except Exception as ex:
-            self.logger.exception('Something happened in get_convert_list')
+            self.logger.exception(ex)
             raise SystemExit
 
     def copy_artwork(self):
@@ -397,6 +397,9 @@ class LosslessToLossyConverter(object):
 
         self.logger.debug('Number of items in convert list: ' + str(len(self.to_convert)))
 
+        assert (self.Decoder.found_exe)
+        assert (self.Encoder.found_exe)
+
         if not self.no_artwork:
             self.logger.debug('Copying artwork')
             self.copy_artwork()
@@ -480,7 +483,7 @@ def setup_logging(debug=False):
     return logger
 
 
-def main(import_args):
+def main(import_args=None):
     print('flacthis {version} Copyright (c) {copyright} {author} ({email})\n'
           .format(version=__version__, copyright=__copyright__, author=__author__, email=__author_email__))
 
@@ -548,5 +551,4 @@ def main(import_args):
 
 
 if __name__ == '__main__':
-    sys.exit(main(0))
-
+    sys.exit(main())
