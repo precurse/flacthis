@@ -1,6 +1,7 @@
 import pytest
 from flacthis import ConverterConfig, LosslessToLossyConverter
 import audio_codecs
+import mutagen
 
 @pytest.fixture
 def converter_config():
@@ -50,6 +51,15 @@ def create_mock_source_dir(tmpdir_factory):
 
     # Compress wav file to flac
     subprocess.call(['flac','--fast', str(f_wav), '-o', str(f_flac)])
+
+    # Create tags on flac file
+    f_tags = mutagen.File(str(f_flac), easy=True)
+
+    f_tags['artist'] = 'fake_artist'
+    f_tags['title'] = 'fake_title'
+    f_tags['tracknumber'] = '1'
+    f_tags['genre'] = 'fake'
+    f_tags.save()
 
     # Create mock album folders
     mock_albums = []
