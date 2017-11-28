@@ -116,6 +116,20 @@ Requirements
     + Used for ID3 tagging, but requirement can be disabled with --noid3 flag
     + https://bitbucket.org/lazka/mutagen
 
+Running Tests
+-------------
+
+Ensure you have flac, lame, fdkaac, and oggenc installed before running tests:
+
+```sh
+pip install -r dev_requirements.txt
+
+make test
+
+or
+
+py.test tests/test_flacthis.py
+```
 
 Benchmarks
 -----------
