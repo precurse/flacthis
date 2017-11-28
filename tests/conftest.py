@@ -26,7 +26,7 @@ def create_mock_source_dir(tmpdir_factory):
     t_dir.mkdir('src')
 
     # Make mock audio wav and flac files
-    sample_len = 1323000 # 10 seconds of noise
+    sample_len = 441000 # 10 seconds of noise
 
     f_wav = src_dir.join('test_wav.wav')
     f_flac = src_dir.join('test_flac.flac')
