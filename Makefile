@@ -4,4 +4,7 @@ init:
 test:
 	py.test tests/test_flacthis.py
 
-.PHONY: init test
+test3:
+	python3 -m pytest tests/test_flacthis.py
+
+.PHONY: init test test3

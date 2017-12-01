@@ -36,7 +36,7 @@ def create_mock_source_dir(tmpdir_factory):
 
     output.setparams((2, 2, 44100, 0, 'NONE', 'not compressed'))
 
-    for i in range(0, sample_len/10):
+    for i in range(0, sample_len // 10):
         value = random.randint(-32767, 32767)
         packed_value = struct.pack('h', value)
 
@@ -45,7 +45,7 @@ def create_mock_source_dir(tmpdir_factory):
             values.append(packed_value)
             values.append(packed_value)
 
-    value_str = ''.join(values)
+    value_str = b''.join(values)
     output.writeframes(value_str)
     output.close()
 
