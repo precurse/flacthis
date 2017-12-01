@@ -128,6 +128,10 @@ make test
 
 or
 
+make test3 # python3
+
+or
+
 py.test tests/test_flacthis.py
 ```
 
