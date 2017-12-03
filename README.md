@@ -1,6 +1,9 @@
 flacthis
 ========
 
+[![Build Status](https://travis-ci.org/precurse/flacthis.svg?branch=master)](https://travis-ci.org/precurse/flacthis)
+
+
 A multithreaded and multi-platform, BSD-licensed, Python-based command line utility that converts
 lossless FLAC or WAV audio files to MP3s, AAC, or Ogg and preserves the directory structure.
 
