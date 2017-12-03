@@ -1,9 +1,19 @@
-os: trusty
+sudo: required
+
 language: python
+
+cache: pip
+
 python:
   - "2.7"
   - "3.6"
+
+before_install:
+  - sudo apt-get -y update
+  - sudo apt-get -y install flac lame fdkaac vorbis-tools
+
 install:
   - pip install -r dev_requirements.txt
+
 script:
   - py.test tests/test_flacthis.py
