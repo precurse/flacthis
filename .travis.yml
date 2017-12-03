@@ -1,0 +1,10 @@
+os: trusty
+language: python
+python:
+  - "2.6"
+  - "2.7"
+  - "3.6"
+install:
+  - pip install -r dev_requirements.txt
+script:
+  - py.test tests/test_flacthis.py
