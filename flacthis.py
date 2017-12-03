@@ -100,7 +100,9 @@ class ConverterConfig(object):
     @threads.setter
     def threads(self, t):
         ''' Set CPU threads to use. 0 = auto-detect '''
-        if t == 0:
+        if t < 0:
+            raise OSError('Cannot set thread count to less than 0')
+        elif t == 0:
             cpu = multiprocessing.cpu_count()
             self.logger.debug('Setting cpu count to {}'.format(cpu))
             self._threads = cpu

@@ -57,6 +57,10 @@ class TestConverterConfig(object):
 
         assert converter_config._threads == cpu_count
 
+    def test_invalid_thread_count(self, converter_config):
+        with pytest.raises(OSError, match='Cannot set thread count to less than 0'):
+            converter_config.threads = -1
+
 class TestCodecManager(object):
     def test_convert_invalid_encoder(self, codec_manager):
         with pytest.raises(audio_codecs.SelectedCodecNotValid):
