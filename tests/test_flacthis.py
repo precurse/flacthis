@@ -8,6 +8,7 @@ from flacthis import ConverterConfig, LosslessToLossyConverter
 import audio_codecs
 import multiprocessing
 import tempfile
+from distutils import spawn
 
 class TestConverterConfig(object):
     # Source dir tests
@@ -105,10 +106,14 @@ class TestConverter(object):
         wav_converter.Encoder = codec_manager.get_encoder('mp3')
         wav_converter.start()
 
+    @pytest.mark.skipif(not spawn.find_executable('fdkaac'),
+                        reason="fdkaac not found")
     def test_convert_flac_to_fdkaac(self, flac_converter, codec_manager):
         flac_converter.Encoder = codec_manager.get_encoder('fdkaac')
         flac_converter.start()
 
+    @pytest.mark.skipif(not spawn.find_executable('fdkaac'),
+                        reason="fdkaac not found")
     def test_convert_wav_to_fdkaac(self, wav_converter, codec_manager):
         wav_converter.Encoder = codec_manager.get_encoder('fdkaac')
         wav_converter.start()
