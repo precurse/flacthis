@@ -205,7 +205,7 @@ class AACEncoder(Codec):
                  exec_file="faac",
                  ext=".m4a",
                  flags="-q 170",
-                 cmd_seq="""{exe} - -w -o "{output_file}" {flags}"""):
+                 cmd_seq="""{exe} - -o "{output_file}" {flags}"""):
         Codec.__init__(self, name, exec_file, ext, cmd_seq, flags)
 
 class FdkAACEncoder(Codec):

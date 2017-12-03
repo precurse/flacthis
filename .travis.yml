@@ -12,7 +12,7 @@ python:
 
 before_install:
   - sudo apt-get -y update
-  - sudo apt-get -y install flac lame vorbis-tools
+  - sudo apt-get -y install flac lame vorbis-tools faac
 
 install:
   - pip install -r dev_requirements.txt

@@ -106,6 +106,14 @@ class TestConverter(object):
         wav_converter.Encoder = codec_manager.get_encoder('mp3')
         wav_converter.start()
 
+    def test_convert_flac_to_faac(self, flac_converter, codec_manager):
+        flac_converter.Encoder = codec_manager.get_encoder('aac')
+        flac_converter.start()
+
+    def test_convert_wav_to_faac(self, wav_converter, codec_manager):
+        wav_converter.Encoder = codec_manager.get_encoder('aac')
+        wav_converter.start()
+
     @pytest.mark.skipif(not spawn.find_executable('fdkaac'),
                         reason="fdkaac not found")
     def test_convert_flac_to_fdkaac(self, flac_converter, codec_manager):
