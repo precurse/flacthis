@@ -29,6 +29,10 @@ package manager for Python.
 
     pip install -r requirements.txt
 
+    or
+
+    pipenv install
+
 Need pip? Try installing it by running the following from the command
 line:
 
@@ -109,7 +113,7 @@ Most of these can be downloaded easily from rarewares.org on Windows, or install
 Requirements
 -------------
 
-* Python (tested on 2.7.13 and Python 3.6.0)
+* Python (automated tests run on 2.6, 2.7, 3.5, and 3.6)
 
 * A supported decoder from above list
 

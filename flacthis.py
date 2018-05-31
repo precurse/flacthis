@@ -3,7 +3,7 @@
 __version__ = '1.5-head'
 __author__ = 'Andrew Klaus'
 __author_email__ = 'andrewklaus@gmail.com'
-__copyright__ = '2017'
+__copyright__ = '2018'
 
 import os
 import time
@@ -14,6 +14,7 @@ import subprocess
 import threading
 import multiprocessing  # for cpu count
 import argparse
+import errno
 
 try:
     import mutagen  # ID3 Tags, Imported if selected from command line
@@ -212,7 +213,7 @@ class LosslessToLossyConverter(object):
                             self.logger.info("(noop) Would create dir: {}".format(d))
 
                     except OSError as e:
-                        if e.errno == os.errno.EEXIST:
+                        if e.errno == errno.EEXIST:
                             # Ignore file already exists exception
                             pass
 
