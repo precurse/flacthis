@@ -113,7 +113,7 @@ Most of these can be downloaded easily from rarewares.org on Windows, or install
 Requirements
 -------------
 
-* Python (automated tests run on 2.6, 2.7, 3.5, and 3.6)
+* Python 2.7+ (automated tests run on 2.7, 3.5, 3.6, and 3.7)
 
 * A supported decoder from above list
 
